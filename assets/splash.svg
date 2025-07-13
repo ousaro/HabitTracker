@@ -1,0 +1,93 @@
+<svg width="1284" height="2778" viewBox="0 0 1284 2778" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="splashBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#764ba2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ade80;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#22c55e;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="glowEffect" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1284" height="2778" fill="url(#splashBg)"/>
+  
+  <!-- Glow effect behind logo -->
+  <circle cx="642" cy="1200" r="400" fill="url(#glowEffect)"/>
+  
+  <!-- Main logo circle -->
+  <circle cx="642" cy="1200" r="200" fill="#ffffff" fill-opacity="0.15" stroke="#ffffff" stroke-width="4"/>
+  
+  <!-- Progress ring -->
+  <circle cx="642" cy="1200" r="160" fill="none" stroke="#ffffff" stroke-width="8" opacity="0.3"/>
+  
+  <!-- Animated progress arc -->
+  <path d="M 642 1040 A 160 160 0 0 1 802 1200" fill="none" stroke="#ffffff" stroke-width="16" stroke-linecap="round" opacity="0.8"/>
+  
+  <!-- Central checkmark -->
+  <path d="M 580 1200 L 620 1240 L 720 1140" fill="none" stroke="url(#logoGradient)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Floating habit indicators -->
+  <circle cx="542" cy="1080" r="8" fill="#ffffff" opacity="0.8"/>
+  <circle cx="642" cy="1060" r="8" fill="#ffffff" opacity="0.6"/>
+  <circle cx="742" cy="1080" r="8" fill="#ffffff" opacity="0.4"/>
+  <circle cx="782" cy="1150" r="8" fill="#ffffff" opacity="0.8"/>
+  <circle cx="802" cy="1200" r="8" fill="#ffffff" opacity="0.6"/>
+  <circle cx="782" cy="1250" r="8" fill="#ffffff" opacity="0.4"/>
+  <circle cx="742" cy="1320" r="8" fill="#ffffff" opacity="0.8"/>
+  <circle cx="642" cy="1340" r="8" fill="#ffffff" opacity="0.6"/>
+  <circle cx="542" cy="1320" r="8" fill="#ffffff" opacity="0.4"/>
+  <circle cx="502" cy="1250" r="8" fill="#ffffff" opacity="0.8"/>
+  <circle cx="482" cy="1200" r="8" fill="#ffffff" opacity="0.6"/>
+  <circle cx="502" cy="1150" r="8" fill="#ffffff" opacity="0.4"/>
+  
+  <!-- App name -->
+  <text x="642" y="1500" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="48" font-weight="300" opacity="0.9">
+    Habit Tracker
+  </text>
+  
+  <!-- Tagline -->
+  <text x="642" y="1560" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="24" font-weight="200" opacity="0.7">
+    Build Better Habits
+  </text>
+  
+  <!-- Calendar-style elements at bottom -->
+  <g transform="translate(442, 2100)" opacity="0.6">
+    <rect x="0" y="0" width="50" height="50" rx="4" fill="#ffffff" opacity="0.3"/>
+    <rect x="60" y="0" width="50" height="50" rx="4" fill="#ffffff" opacity="0.6"/>
+    <rect x="120" y="0" width="50" height="50" rx="4" fill="#ffffff" opacity="0.3"/>
+    <rect x="180" y="0" width="50" height="50" rx="4" fill="#ffffff" opacity="0.8"/>
+    <rect x="240" y="0" width="50" height="50" rx="4" fill="#ffffff" opacity="0.3"/>
+    <rect x="300" y="0" width="50" height="50" rx="4" fill="#ffffff" opacity="0.6"/>
+    <rect x="360" y="0" width="50" height="50" rx="4" fill="#ffffff" opacity="0.3"/>
+    
+    <!-- Small checkmarks -->
+    <path d="M 15 25 L 20 30 L 35 15" fill="none" stroke="url(#logoGradient)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 75 25 L 80 30 L 95 15" fill="none" stroke="url(#logoGradient)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 195 25 L 200 30 L 215 15" fill="none" stroke="url(#logoGradient)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 315 25 L 320 30 L 335 15" fill="none" stroke="url(#logoGradient)" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Decorative dots -->
+  <g opacity="0.4">
+    <circle cx="200" cy="800" r="3" fill="#ffffff"/>
+    <circle cx="250" cy="900" r="2" fill="#ffffff"/>
+    <circle cx="150" cy="1000" r="4" fill="#ffffff"/>
+    <circle cx="1084" cy="800" r="3" fill="#ffffff"/>
+    <circle cx="1034" cy="900" r="2" fill="#ffffff"/>
+    <circle cx="1134" cy="1000" r="4" fill="#ffffff"/>
+    <circle cx="200" cy="1600" r="3" fill="#ffffff"/>
+    <circle cx="250" cy="1700" r="2" fill="#ffffff"/>
+    <circle cx="150" cy="1800" r="4" fill="#ffffff"/>
+    <circle cx="1084" cy="1600" r="3" fill="#ffffff"/>
+    <circle cx="1034" cy="1700" r="2" fill="#ffffff"/>
+    <circle cx="1134" cy="1800" r="4" fill="#ffffff"/>
+  </g>
+</svg>

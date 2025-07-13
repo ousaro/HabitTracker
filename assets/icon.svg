@@ -1,0 +1,42 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="checkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ade80;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#22c55e;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <circle cx="512" cy="512" r="480" fill="url(#bgGradient)" stroke="#ffffff" stroke-width="8"/>
+  
+  <!-- Main habit tracking circle -->
+  <circle cx="512" cy="512" r="320" fill="none" stroke="#ffffff" stroke-width="12" opacity="0.3"/>
+  
+  <!-- Progress arc -->
+  <path d="M 512 192 A 320 320 0 0 1 832 512" fill="none" stroke="#ffffff" stroke-width="24" stroke-linecap="round" opacity="0.8"/>
+  
+  <!-- Checkmark -->
+  <path d="M 380 512 L 460 592 L 680 372" fill="none" stroke="url(#checkGradient)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Small dots for habit tracking -->
+  <circle cx="412" cy="312" r="12" fill="#ffffff" opacity="0.8"/>
+  <circle cx="512" cy="272" r="12" fill="#ffffff" opacity="0.6"/>
+  <circle cx="612" cy="312" r="12" fill="#ffffff" opacity="0.4"/>
+  <circle cx="692" cy="392" r="12" fill="#ffffff" opacity="0.8"/>
+  <circle cx="732" cy="492" r="12" fill="#ffffff" opacity="0.6"/>
+  
+  <!-- Calendar-like elements -->
+  <rect x="320" y="680" width="80" height="80" rx="8" fill="#ffffff" opacity="0.9"/>
+  <rect x="420" y="680" width="80" height="80" rx="8" fill="#ffffff" opacity="0.7"/>
+  <rect x="520" y="680" width="80" height="80" rx="8" fill="#ffffff" opacity="0.9"/>
+  <rect x="620" y="680" width="80" height="80" rx="8" fill="#ffffff" opacity="0.5"/>
+  
+  <!-- Small check marks in calendar -->
+  <path d="M 340 720 L 350 730 L 380 700" fill="none" stroke="url(#checkGradient)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 540 720 L 550 730 L 580 700" fill="none" stroke="url(#checkGradient)" stroke-width="4" stroke-linecap="round"/>
+</svg>
