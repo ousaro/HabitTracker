@@ -13,6 +13,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
+import DraggableFlatList, {
+  ScaleDecorator,
+  ShadowDecorator,
+  OpacityDecorator,
+  RenderItemParams,
+} from 'react-native-draggable-flatlist';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  interpolate,
+} from 'react-native-reanimated';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Habit } from '../types';
 import { StorageService } from '../services/StorageService';
@@ -26,6 +38,8 @@ interface HabitListItemProps {
   onToggleActive: (habit: Habit) => void;
   onPress: (habit: Habit) => void;
   animationDelay: number;
+  drag?: () => void;
+  isActive?: boolean;
 }
 
 const HabitListItem: React.FC<HabitListItemProps> = ({
@@ -35,21 +49,65 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
   onToggleActive,
   onPress,
   animationDelay,
+  drag,
+  isActive: isDragging,
 }) => {
   const { theme } = useTheme();
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: scale.value }],
+      opacity: opacity.value,
+    };
+  });
+
+  React.useEffect(() => {
+    if (isDragging) {
+      scale.value = withSpring(1.05, {
+        damping: 15,
+        stiffness: 200,
+      });
+      opacity.value = withSpring(0.9, {
+        damping: 15,
+        stiffness: 200,
+      });
+    } else {
+      scale.value = withSpring(1, {
+        damping: 15,
+        stiffness: 200,
+      });
+      opacity.value = withSpring(1, {
+        damping: 15,
+        stiffness: 200,
+      });
+    }
+  }, [isDragging]);
   
   return (
-    <Animatable.View
-      animation="fadeInRight"
-      delay={animationDelay}
-      duration={600}
-      style={[styles.habitItem, { backgroundColor: theme.colors.surface }]}
-    >
-      <TouchableOpacity
-        onPress={() => onPress(habit)}
-        activeOpacity={0.7}
-        style={styles.habitTouchable}
-      >
+    <ScaleDecorator>
+      <OpacityDecorator activeOpacity={0.8}>
+        <ShadowDecorator>
+          <Animated.View style={[animatedStyle]}>
+            <Animatable.View
+              animation="fadeInRight"
+              delay={animationDelay}
+              duration={600}
+              style={[
+                styles.habitItem, 
+                { 
+                  backgroundColor: theme.colors.surface,
+                }
+              ]}
+            >
+        <TouchableOpacity
+          onPress={() => onPress(habit)}
+          onLongPress={drag}
+          delayLongPress={300}
+          activeOpacity={0.7}
+          style={styles.habitTouchable}
+        >
         <LinearGradient
           colors={habit.isActive ? [habit.color, `${habit.color}CC`] : ['#f1f5f9', '#e2e8f0']}
           style={styles.habitCard}
@@ -95,6 +153,7 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
             </View>
             
             <View style={styles.habitActions}>
+
               <TouchableOpacity
                 onPress={(e: any) => {
                   e.stopPropagation();
@@ -149,7 +208,11 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
           </View>
         </LinearGradient>
       </TouchableOpacity>
-    </Animatable.View>
+            </Animatable.View>
+          </Animated.View>
+        </ShadowDecorator>
+      </OpacityDecorator>
+    </ScaleDecorator>
   );
 };
 
@@ -165,7 +228,16 @@ export const HabitsScreen: React.FC<{
   const loadHabits = async () => {
     try {
       const allHabits = await StorageService.getHabits();
-      setHabits(allHabits);
+      // Sort habits by order, then by creation date
+      const sortedHabits = allHabits.sort((a, b) => {
+        if (a.order !== undefined && b.order !== undefined) {
+          return a.order - b.order;
+        }
+        if (a.order !== undefined) return -1;
+        if (b.order !== undefined) return 1;
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      });
+      setHabits(sortedHabits);
     } catch (error) {
       console.error('Error loading habits:', error);
     } finally {
@@ -235,6 +307,24 @@ export const HabitsScreen: React.FC<{
     navigation.navigate('HabitDetail', { habitId: habit.id });
   };
 
+  const handleDragEnd = async ({ data }: { data: Habit[] }) => {
+    setHabits(data);
+    await StorageService.updateHabitsOrder(data);
+  };
+
+  const renderHabitItem = ({ item: habit, drag, isActive }: RenderItemParams<Habit>) => (
+    <HabitListItem
+      habit={habit}
+      onEdit={handleEditHabit}
+      onDelete={handleDeleteHabit}
+      onToggleActive={handleToggleActive}
+      onPress={handleHabitPress}
+      animationDelay={0}
+      drag={drag}
+      isActive={isActive}
+    />
+  );
+
   const activeHabits = habits.filter(h => h.isActive);
   const inactiveHabits = habits.filter(h => !h.isActive);
 
@@ -292,17 +382,26 @@ export const HabitsScreen: React.FC<{
                 <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
                   Active Habits ({activeHabits.length})
                 </Text>
-                {activeHabits.map((habit, index) => (
-                  <HabitListItem
-                    key={habit.id}
-                    habit={habit}
-                    onEdit={handleEditHabit}
-                    onDelete={handleDeleteHabit}
-                    onToggleActive={handleToggleActive}
-                    onPress={handleHabitPress}
-                    animationDelay={index * 100}
-                  />
-                ))}
+                <DraggableFlatList
+                  data={activeHabits}
+                  onDragEnd={({ data }: { data: Habit[] }) => {
+                    const updatedHabits = [...data, ...inactiveHabits];
+                    handleDragEnd({ data: updatedHabits });
+                  }}
+                  keyExtractor={(item: Habit) => item.id}
+                  renderItem={renderHabitItem}
+                  scrollEnabled={false}
+                  dragItemOverflow={true}
+                  activationDistance={0}
+                  dragHitSlop={{ top: 0, bottom: 0, left: 0, right: 0 }}
+                  animationConfig={{
+                    damping: 20,
+                    stiffness: 150,
+                    mass: 0.2,
+                    restSpeedThreshold: 0.05,
+                    restDisplacementThreshold: 0.05,
+                  }}
+                />
               </View>
             )}
 
@@ -311,17 +410,26 @@ export const HabitsScreen: React.FC<{
                 <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
                   Paused Habits ({inactiveHabits.length})
                 </Text>
-                {inactiveHabits.map((habit, index) => (
-                  <HabitListItem
-                    key={habit.id}
-                    habit={habit}
-                    onEdit={handleEditHabit}
-                    onDelete={handleDeleteHabit}
-                    onToggleActive={handleToggleActive}
-                    onPress={handleHabitPress}
-                    animationDelay={(activeHabits.length + index) * 100}
-                  />
-                ))}
+                <DraggableFlatList
+                  data={inactiveHabits}
+                  onDragEnd={({ data }: { data: Habit[] }) => {
+                    const updatedHabits = [...activeHabits, ...data];
+                    handleDragEnd({ data: updatedHabits });
+                  }}
+                  keyExtractor={(item: Habit) => item.id}
+                  renderItem={renderHabitItem}
+                  scrollEnabled={false}
+                  dragItemOverflow={true}
+                  activationDistance={0}
+                  dragHitSlop={{ top: 0, bottom: 0, left: 0, right: 0 }}
+                  animationConfig={{
+                    damping: 20,
+                    stiffness: 150,
+                    mass: 0.2,
+                    restSpeedThreshold: 0.05,
+                    restDisplacementThreshold: 0.05,
+                  }}
+                />
               </View>
             )}
           </>

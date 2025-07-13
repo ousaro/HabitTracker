@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
+import { PieChart } from 'react-native-chart-kit';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { Habit, HabitEntry, HabitStreak } from '../types';
@@ -71,6 +72,7 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
   const [recentEntries, setRecentEntries] = useState<HabitEntry[]>([]);
   const [weeklyData, setWeeklyData] = useState<number[]>([]);
   const [totalCompletions, setTotalCompletions] = useState(0);
+  const [totalDays, setTotalDays] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const loadHabitData = useCallback(async () => {
@@ -111,10 +113,22 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
       
       setRecentEntries(entries);
       
-      // Calculate total completions
+      // Calculate total completions and total days
       const allEntries = await StorageService.getAllHabitEntries();
       const habitEntries = allEntries.filter(entry => entry.habitId === habitId && entry.completed);
       setTotalCompletions(habitEntries.length);
+      
+      // Calculate total days since habit creation (more accurate calculation)
+      const createdDate = new Date(foundHabit.createdAt);
+      const todayDate = new Date();
+      
+      // Reset time to start of day for accurate day calculation
+      createdDate.setHours(0, 0, 0, 0);
+      todayDate.setHours(0, 0, 0, 0);
+      
+      const timeDiff = todayDate.getTime() - createdDate.getTime();
+      const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1; // +1 to include the creation day
+      setTotalDays(Math.max(1, daysDiff)); // Ensure at least 1 day
       
     } catch (error) {
       console.error('Error loading habit data:', error);
@@ -154,6 +168,117 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
       month: 'long', 
       day: 'numeric' 
     });
+  };
+
+  const renderCompletionChart = () => {
+    if (!habit || totalDays === 0) {
+      return null;
+    }
+
+    const completedDays = totalCompletions;
+    const incompleteDays = totalDays - totalCompletions;
+
+    // Show a different view for new habits (first day)
+    if (totalDays === 1 && completedDays === 0) {
+      return (
+        <Animatable.View animation="fadeInUp" delay={700} style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            Completion Overview
+          </Text>
+          <View style={[styles.chartCard, { backgroundColor: theme.colors.surface }]}>
+            <MaterialIcons name="timeline" size={48} color={theme.colors.textSecondary} />
+            <Text style={[styles.emptyChartTitle, { color: theme.colors.text }]}>
+              Just Getting Started!
+            </Text>
+            <Text style={[styles.emptyChartSubtitle, { color: theme.colors.textSecondary }]}>
+              Your completion data will appear here as you build your habit.
+            </Text>
+          </View>
+        </Animatable.View>
+      );
+    }
+
+    const pieData = [
+      {
+        name: 'Completed',
+        population: completedDays,
+        color: habit.color,
+        legendFontColor: theme.colors.text,
+        legendFontSize: 14,
+      },
+      {
+        name: 'Incomplete',
+        population: incompleteDays,
+        color: theme.colors.error || '#ef4444',
+        legendFontColor: theme.colors.text,
+        legendFontSize: 14,
+      },
+    ];
+
+    // Only show chart if there's meaningful data
+    if (completedDays === 0 && incompleteDays <= 1) {
+      return (
+        <Animatable.View animation="fadeInUp" delay={700} style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            Completion Overview
+          </Text>
+          <View style={[styles.chartCard, { backgroundColor: theme.colors.surface }]}>
+            <MaterialIcons name="timeline" size={48} color={theme.colors.textSecondary} />
+            <Text style={[styles.emptyChartTitle, { color: theme.colors.text }]}>
+              No completions yet
+            </Text>
+            <Text style={[styles.emptyChartSubtitle, { color: theme.colors.textSecondary }]}>
+              Complete this habit to see your progress visualization.
+            </Text>
+          </View>
+        </Animatable.View>
+      );
+    }
+
+    return (
+      <Animatable.View animation="fadeInUp" delay={700} style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+          Completion Overview
+        </Text>
+        <View style={[styles.chartCard, { backgroundColor: theme.colors.surface }]}>
+          <PieChart
+            data={pieData}
+            width={width - 80}
+            height={220}
+            chartConfig={{
+              backgroundColor: theme.colors.surface,
+              backgroundGradientFrom: theme.colors.surface,
+              backgroundGradientTo: theme.colors.surface,
+              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+            }}
+            accessor="population"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            absolute
+          />
+          <View style={styles.chartStats}>
+            <View style={styles.chartStatItem}>
+              <View style={[styles.chartColorDot, { backgroundColor: habit.color }]} />
+              <Text style={[styles.chartStatText, { color: theme.colors.text }]}>
+                Completed: {completedDays} days
+              </Text>
+            </View>
+            <View style={styles.chartStatItem}>
+              <View style={[styles.chartColorDot, { backgroundColor: theme.colors.error || '#ef4444' }]} />
+              <Text style={[styles.chartStatText, { color: theme.colors.text }]}>
+                Incomplete: {incompleteDays} days
+              </Text>
+            </View>
+            <View style={styles.chartStatItem}>
+              <MaterialIcons name="trending-up" size={16} color={habit.color} />
+              <Text style={[styles.chartStatText, { color: theme.colors.text, fontWeight: '600' }]}>
+                Success Rate: {totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0}%
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Animatable.View>
+    );
   };
 
   if (loading || !habit) {
@@ -223,9 +348,9 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
           />
           
           <StatCard
-            title="Total Completions"
+            title="Completed Days"
             value={totalCompletions}
-            subtitle="times"
+            subtitle={`of ${totalDays} day${totalDays === 1 ? '' : 's'}`}
             icon="check-circle"
             color="#22c55e"
             delay={300}
@@ -233,13 +358,16 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
           
           <StatCard
             title="Success Rate"
-            value={`${habit.completionPercentage || 0}%`}
-            subtitle="last 30 days"
+            value={`${totalDays > 0 ? Math.round((totalCompletions / totalDays) * 100) : 0}%`}
+            subtitle="overall"
             icon="trending-up"
             color="#3b82f6"
             delay={400}
           />
         </View>
+
+        {/* Completion Chart */}
+        {renderCompletionChart()}
 
         {/* Weekly Progress */}
         <Animatable.View animation="fadeInUp" delay={500} style={styles.section}>
@@ -514,5 +642,50 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  chartCard: {
+    borderRadius: 16,
+    padding: 16,
+    elevation: 2,
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    alignItems: 'center',
+  },
+  chartStats: {
+    marginTop: 16,
+    alignSelf: 'stretch',
+  },
+  chartStatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  chartColorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  chartStatText: {
+    fontSize: 14,
+    flex: 1,
+  },
+  emptyChartTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyChartSubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    paddingHorizontal: 20,
   },
 });

@@ -31,7 +31,12 @@ export class StorageService {
   static async addHabit(habit: Habit): Promise<void> {
     try {
       const habits = await this.getHabits();
-      habits.push(habit);
+      // Set order to be at the end of current habits
+      const maxOrder = habits.reduce((max, h) => {
+        return h.order !== undefined ? Math.max(max, h.order) : max;
+      }, -1);
+      const habitWithOrder = { ...habit, order: maxOrder + 1 };
+      habits.push(habitWithOrder);
       await this.saveHabits(habits);
     } catch (error) {
       console.error('Error adding habit:', error);
@@ -62,6 +67,19 @@ export class StorageService {
       await this.deleteHabitStreak(habitId);
     } catch (error) {
       console.error('Error deleting habit:', error);
+    }
+  }
+
+  static async updateHabitsOrder(habits: Habit[]): Promise<void> {
+    try {
+      // Update the order property for each habit
+      const updatedHabits = habits.map((habit, index) => ({
+        ...habit,
+        order: index
+      }));
+      await this.saveHabits(updatedHabits);
+    } catch (error) {
+      console.error('Error updating habits order:', error);
     }
   }
 

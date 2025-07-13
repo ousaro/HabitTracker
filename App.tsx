@@ -72,9 +72,10 @@ function AppContent() {
               },
               shadowOpacity: 0.1,
               shadowRadius: 8,
-              height: 60 + insets.bottom,
-              paddingBottom: insets.bottom + 8,
-              paddingTop: 8,
+              height: 70 + insets.bottom,
+              paddingBottom: insets.bottom + 12,
+              paddingTop: 12,
+              paddingHorizontal: 16,
             },
             tabBarLabelStyle: {
               fontSize: 12,

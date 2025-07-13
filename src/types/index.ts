@@ -12,6 +12,7 @@ export interface Habit {
   createdAt: string;
   isActive: boolean;
   completionPercentage?: number; // Add completion percentage
+  order?: number; // Add order for custom sorting
 }
 
 export interface HabitEntry {
