@@ -272,79 +272,13 @@ interface Habit {
 - **Privacy by Design**: Built with user privacy as a core principle
 - **Secure Storage**: Uses React Native's secure storage mechanisms
 
-## 🔮 Roadmap & Future Features
-
-### Near-term Enhancements (v1.1)
-- [ ] **Push Notifications**: Habit reminders and motivational messages
-- [ ] **Widget Support**: Home screen widgets for quick habit checking
-- [ ] **Data Export/Import**: Backup and restore functionality
-- [ ] **Habit Templates**: Pre-built habit templates for common goals
-
-### Medium-term Features (v1.2)
-- [ ] **Social Features**: Share progress with friends and family
-- [ ] **Habit Challenges**: Time-limited challenges and goals
-- [ ] **Advanced Analytics**: Machine learning insights and predictions
-- [ ] **Integration APIs**: Connect with fitness trackers and health apps
-
-### Long-term Vision (v2.0)
-- [ ] **Cloud Sync**: Optional cloud synchronization across devices
-- [ ] **Community Features**: Public habit tracking and motivation
-- [ ] **Gamification**: Points, badges, and achievement systems
-- [ ] **AI Coaching**: Personalized habit formation recommendations
-
-## 🤝 Contributing
-
-We welcome contributions to make HabitTracker even better! Here's how you can help:
-
-### Development Setup
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes and test thoroughly
-4. Commit with clear messages: `git commit -m 'Add amazing feature'`
-5. Push to your branch: `git push origin feature/amazing-feature`
-6. Create a Pull Request
-
-### Contribution Guidelines
-- Follow the existing code style and TypeScript conventions
-- Add tests for new features
-- Update documentation for significant changes
-- Ensure all existing tests pass
-- Keep commits focused and atomic
-
-### Areas for Contribution
-- 🐛 **Bug Fixes**: Help identify and resolve issues
-- ✨ **New Features**: Implement items from the roadmap
-- 📚 **Documentation**: Improve guides and API documentation
-- 🎨 **UI/UX**: Design improvements and accessibility enhancements
-- 🧪 **Testing**: Increase test coverage and quality
-- 🌐 **Localization**: Add support for additional languages
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
-
-- **Expo Team** for the excellent development platform
-- **React Native Community** for the robust ecosystem
-- **Open Source Contributors** whose libraries make this app possible
-- **Beta Testers** who provided valuable feedback during development
-
-## 📞 Support & Contact
-
-- **GitHub Issues**: [Report bugs or request features](https://github.com/ousaro/HabitTracker/issues)
-- **Discussions**: [Join community discussions](https://github.com/ousaro/HabitTracker/discussions)
-- **Email**: [Contact the developer](mailto:your-email@example.com)
-
-## 🔗 Links
-
-- **Live Demo**: [Expo Snack Preview](https://snack.expo.dev/@yourusername/habittracker)
-- **Download**: [Get it on Google Play](#) | [Download on App Store](#)
-- **Website**: [Project Homepage](#)
-- **Documentation**: [Full API Documentation](#)
-
 ---
 
-**Built with ❤️ by [Your Name](https://github.com/ousaro)**
+**Built with ❤️ by [Ousaro](https://github.com/ousaro)**
 
 *Start building better habits today with HabitTracker!*
