@@ -10,23 +10,39 @@ A beautiful, intuitive, and feature-rich habit tracking mobile application built
 
 ## 📸 Screenshots
 
-<!-- TODO: Add screenshots here -->
-*Screenshots will be added here showcasing the main features and UI*
+Experience the beautiful and intuitive interface of HabitTracker:
 
-### Home Screen
-[Screenshot placeholder - Dashboard with today's habits and progress overview]
+### 🏠 Home Screen
+![Home Screen](assets/preview/home.jpg)
+*Dashboard with today's habits and progress overview*
 
-### Habits Management
-[Screenshot placeholder - Habit list with drag-and-drop functionality]
+### 📝 Habits Management
+<div style="display: flex; gap: 10px;">
+  <img src="assets/preview/habitsManager.jpg" alt="Habits Manager" width="45%">
+  <img src="assets/preview/habitsManager2.jpg" alt="Habits Manager - Drag & Drop" width="45%">
+</div>
 
-### Habit Details
-[Screenshot placeholder - Detailed habit statistics and progress charts]
+*Habit list with drag-and-drop functionality for easy organization*
 
-### Analytics Dashboard
-[Screenshot placeholder - Comprehensive analytics and insights]
+### 📊 Habit Details
+<div style="display: flex; gap: 10px;">
+  <img src="assets/preview/habitDetail.jpg" alt="Habit Detail View" width="45%">
+  <img src="assets/preview/habitDetail2.jpg" alt="Habit Detail Stats" width="45%">
+</div>
 
-### Add/Edit Habit
-[Screenshot placeholder - Habit creation and editing interface]
+*Detailed habit statistics, progress charts, and streak tracking*
+
+### 📈 Analytics Dashboard
+![Analytics Screen](assets/preview/analitics.jpg)
+*Comprehensive analytics and insights across all your habits*
+
+### ➕ Add/Edit Habit
+<div style="display: flex; gap: 10px;">
+  <img src="assets/preview/addHabit.jpg" alt="Add Habit Form" width="45%">
+  <img src="assets/preview/addHabit2.jpg" alt="Add Habit Categories" width="45%">
+</div>
+
+*Intuitive habit creation and editing interface with customization options*
 
 ## ✨ Features
 
