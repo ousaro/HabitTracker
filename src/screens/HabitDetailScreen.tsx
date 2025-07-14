@@ -202,7 +202,7 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
       {
         name: 'Completed',
         population: completedDays,
-        color: habit.color,
+        color: '#4caf50', // success green
         legendFontColor: theme.colors.text,
         legendFontSize: 14,
       },
@@ -258,7 +258,7 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
           />
           <View style={styles.chartStats}>
             <View style={styles.chartStatItem}>
-              <View style={[styles.chartColorDot, { backgroundColor: habit.color }]} />
+              <View style={[styles.chartColorDot, { backgroundColor: '#4caf50' }]} />
               <Text style={[styles.chartStatText, { color: theme.colors.text }]}>
                 Completed: {completedDays} days
               </Text>

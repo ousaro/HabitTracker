@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   RefreshControl,
   Alert,
@@ -40,6 +40,7 @@ interface HabitListItemProps {
   animationDelay: number;
   drag?: () => void;
   isActive?: boolean;
+  isDragMode: boolean;
 }
 
 const HabitListItem: React.FC<HabitListItemProps> = ({
@@ -51,6 +52,7 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
   animationDelay,
   drag,
   isActive: isDragging,
+  isDragMode,
 }) => {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
@@ -103,14 +105,19 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
             >
         <TouchableOpacity
           onPress={() => onPress(habit)}
-          onLongPress={drag}
-          delayLongPress={300}
+          onLongPress={isDragMode ? drag : undefined}
+          delayLongPress={isDragMode ? 200 : 500}
           activeOpacity={0.7}
           style={styles.habitTouchable}
+          disabled={isDragging}
         >
         <LinearGradient
           colors={habit.isActive ? [habit.color, `${habit.color}CC`] : ['#f1f5f9', '#e2e8f0']}
-          style={styles.habitCard}
+          style={[
+            styles.habitCard,
+            isDragMode && styles.habitCardDragMode,
+            isDragging && styles.habitCardDragging
+          ]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
@@ -153,6 +160,18 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
             </View>
             
             <View style={styles.habitActions}>
+              {isDragMode && (
+                <View style={[
+                  styles.dragHandle,
+                  { backgroundColor: habit.isActive ? 'rgba(255,255,255,0.2)' : `${habit.color}20` }
+                ]}>
+                  <MaterialIcons
+                    name="drag-indicator"
+                    size={16}
+                    color={habit.isActive ? 'rgba(255,255,255,0.7)' : habit.color}
+                  />
+                </View>
+              )}
 
               <TouchableOpacity
                 onPress={(e: any) => {
@@ -224,6 +243,7 @@ export const HabitsScreen: React.FC<{
   const [habits, setHabits] = useState<Habit[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isDragMode, setIsDragMode] = useState(false);
 
   const loadHabits = async () => {
     try {
@@ -322,8 +342,130 @@ export const HabitsScreen: React.FC<{
       animationDelay={0}
       drag={drag}
       isActive={isActive}
+      isDragMode={isDragMode}
     />
   );
+
+  // Create a single data array with sections
+  const createFlatListData = () => {
+    const data: any[] = [];
+    
+    // Add drag mode indicator
+    if (isDragMode) {
+      data.push({ type: 'dragIndicator' });
+    }
+    
+    // Add empty state or habits
+    if (habits.length === 0) {
+      data.push({ type: 'emptyState' });
+    } else {
+      // Add active habits section
+      if (activeHabits.length > 0) {
+        data.push({ type: 'sectionHeader', title: `Active Habits (${activeHabits.length})` });
+        data.push({ type: 'activeHabits', habits: activeHabits });
+      }
+      
+      // Add inactive habits section  
+      if (inactiveHabits.length > 0) {
+        data.push({ type: 'sectionHeader', title: `Paused Habits (${inactiveHabits.length})` });
+        data.push({ type: 'inactiveHabits', habits: inactiveHabits });
+      }
+    }
+    
+    return data;
+  };
+
+  const renderFlatListItem = ({ item }: { item: any }) => {
+    switch (item.type) {
+      case 'dragIndicator':
+        return (
+          <View style={[styles.dragModeIndicator, { backgroundColor: theme.colors.primary + '20' }]}>
+            <MaterialIcons name="drag-indicator" size={16} color={theme.colors.primary} />
+            <Text style={[styles.dragModeText, { color: theme.colors.primary }]}>
+              Drag mode active - Long press and drag to reorder - Side scroll
+            </Text>
+          </View>
+        );
+        
+      case 'emptyState':
+        return (
+          <View style={styles.emptyState}>
+            <MaterialIcons name="psychology" size={64} color={theme.colors.textSecondary} />
+            <Text style={[styles.emptyStateTitle, { color: theme.colors.text }]}>No habits yet</Text>
+            <Text style={[styles.emptyStateSubtitle, { color: theme.colors.textSecondary }]}>
+              Start your journey by creating your first habit!
+            </Text>
+            <TouchableOpacity onPress={handleAddHabit} style={styles.createFirstButton}>
+              <LinearGradient
+                colors={[theme.colors.primary, theme.colors.secondary]}
+                style={styles.createFirstButtonGradient}
+              >
+                <MaterialIcons name="add" size={20} color="#ffffff" />
+                <Text style={styles.createFirstButtonText}>Create First Habit</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        );
+        
+      case 'sectionHeader':
+        return (
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            {item.title}
+          </Text>
+        );
+        
+      case 'activeHabits':
+        return (
+          <DraggableFlatList
+            data={item.habits}
+            onDragEnd={({ data }: { data: Habit[] }) => {
+              const updatedHabits = [...data, ...inactiveHabits];
+              handleDragEnd({ data: updatedHabits });
+            }}
+            keyExtractor={(habit: Habit) => habit.id}
+            renderItem={renderHabitItem}
+            scrollEnabled={false}
+            dragItemOverflow={false}
+            activationDistance={isDragMode ? 0 : 50}
+            dragHitSlop={{ top: 0, bottom: 0, left: 0, right: 0 }}
+            animationConfig={{
+              damping: 20,
+              stiffness: 150,
+              mass: 0.2,
+              restSpeedThreshold: 0.05,
+              restDisplacementThreshold: 0.05,
+            }}
+          />
+        );
+        
+      case 'inactiveHabits':
+        return (
+          <DraggableFlatList
+            data={item.habits}
+            onDragEnd={({ data }: { data: Habit[] }) => {
+              const updatedHabits = [...activeHabits, ...data];
+              handleDragEnd({ data: updatedHabits });
+            }}
+            keyExtractor={(habit: Habit) => habit.id}
+            renderItem={renderHabitItem}
+            scrollEnabled={false}
+            dragItemOverflow={false}
+            activationDistance={isDragMode ? 0 : 50}
+            dragHitSlop={{ top: 0, bottom: 0, left: 0, right: 0 }}
+            animationConfig={{
+              damping: 20,
+              stiffness: 150,
+              mass: 0.2,
+              restSpeedThreshold: 0.05,
+              restDisplacementThreshold: 0.05,
+            }}
+          />
+        );
+        
+      default:
+        return null;
+    }
+  };
 
   const activeHabits = habits.filter(h => h.isActive);
   const inactiveHabits = habits.filter(h => !h.isActive);
@@ -347,94 +489,32 @@ export const HabitsScreen: React.FC<{
       >
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>My Habits</Text>
+          <TouchableOpacity
+            onPress={() => setIsDragMode(!isDragMode)}
+            style={[
+              styles.dragModeButton,
+              { backgroundColor: isDragMode ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)' }
+            ]}
+          >
+            <MaterialIcons
+              name={isDragMode ? 'drag-indicator' : 'reorder'}
+              size={20}
+              color="rgba(255,255,255,0.9)"
+            />
+          </TouchableOpacity>
         </View>
       </LinearGradient>
 
-      <ScrollView
-        style={styles.scrollView}
+      <FlatList
+        data={createFlatListData()}
+        renderItem={renderFlatListItem}
+        keyExtractor={(item, index) => `${item.type}_${index}`}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-      >
-        {habits.length === 0 ? (
-          <View style={styles.emptyState}>
-            <MaterialIcons name="psychology" size={64} color={theme.colors.textSecondary} />
-            <Text style={[styles.emptyStateTitle, { color: theme.colors.text }]}>No habits yet</Text>
-            <Text style={[styles.emptyStateSubtitle, { color: theme.colors.textSecondary }]}>
-              Start your journey by creating your first habit!
-            </Text>
-            <TouchableOpacity onPress={handleAddHabit} style={styles.createFirstButton}>
-              <LinearGradient
-                colors={[theme.colors.primary, theme.colors.secondary]}
-                style={styles.createFirstButtonGradient}
-              >
-                <MaterialIcons name="add" size={20} color="#ffffff" />
-                <Text style={styles.createFirstButtonText}>Create First Habit</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <>
-            {activeHabits.length > 0 && (
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                  Active Habits ({activeHabits.length})
-                </Text>
-                <DraggableFlatList
-                  data={activeHabits}
-                  onDragEnd={({ data }: { data: Habit[] }) => {
-                    const updatedHabits = [...data, ...inactiveHabits];
-                    handleDragEnd({ data: updatedHabits });
-                  }}
-                  keyExtractor={(item: Habit) => item.id}
-                  renderItem={renderHabitItem}
-                  scrollEnabled={false}
-                  dragItemOverflow={true}
-                  activationDistance={0}
-                  dragHitSlop={{ top: 0, bottom: 0, left: 0, right: 0 }}
-                  animationConfig={{
-                    damping: 20,
-                    stiffness: 150,
-                    mass: 0.2,
-                    restSpeedThreshold: 0.05,
-                    restDisplacementThreshold: 0.05,
-                  }}
-                />
-              </View>
-            )}
-
-            {inactiveHabits.length > 0 && (
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                  Paused Habits ({inactiveHabits.length})
-                </Text>
-                <DraggableFlatList
-                  data={inactiveHabits}
-                  onDragEnd={({ data }: { data: Habit[] }) => {
-                    const updatedHabits = [...activeHabits, ...data];
-                    handleDragEnd({ data: updatedHabits });
-                  }}
-                  keyExtractor={(item: Habit) => item.id}
-                  renderItem={renderHabitItem}
-                  scrollEnabled={false}
-                  dragItemOverflow={true}
-                  activationDistance={0}
-                  dragHitSlop={{ top: 0, bottom: 0, left: 0, right: 0 }}
-                  animationConfig={{
-                    damping: 20,
-                    stiffness: 150,
-                    mass: 0.2,
-                    restSpeedThreshold: 0.05,
-                    restDisplacementThreshold: 0.05,
-                  }}
-                />
-              </View>
-            )}
-          </>
-        )}
-      </ScrollView>
+      />
       
       {/* Floating Action Button */}
       <TouchableOpacity 
@@ -478,11 +558,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: 'rgba(255, 255, 255, 0.95)',
   },
-  scrollView: {
-    flex: 1,
+  dragModeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  dragModeIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    marginBottom: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'currentColor',
+  },
+  dragModeText: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 8,
   },
   scrollContent: {
     padding: 24,
+    flexGrow: 1,
   },
   section: {
     marginBottom: 32,
@@ -491,6 +592,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 16,
+    marginTop: 16,
   },
   habitItem: {
     marginBottom: 12,
@@ -509,6 +611,17 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+  },
+  habitCardDragMode: {
+    borderWidth: 2,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+    borderStyle: 'dashed',
+  },
+  habitCardDragging: {
+    elevation: 8,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    transform: [{ scale: 1.02 }],
   },
   habitContent: {
     flexDirection: 'row',
@@ -541,6 +654,14 @@ const styles = StyleSheet.create({
   habitActions: {
     flexDirection: 'row',
     gap: 8,
+  },
+  dragHandle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 4,
   },
   actionButton: {
     width: 36,
