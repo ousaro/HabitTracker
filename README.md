@@ -6,6 +6,7 @@ A beautiful, intuitive, and feature-rich habit tracking mobile application built
 ![React Native](https://img.shields.io/badge/React%20Native-0.79.5-blue.svg)
 ![Expo](https://img.shields.io/badge/Expo-~53.0.17-black.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-~5.8.3-blue.svg)
+![React](https://img.shields.io/badge/React-19.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 ## 📸 Screenshots
@@ -29,7 +30,6 @@ A beautiful, intuitive, and feature-rich habit tracking mobile application built
 ### 📝 Habit Management
 - **Create Custom Habits**: Set up personalized habits with names, descriptions, and categories
 - **Flexible Scheduling**: Support for daily, weekly, and custom frequency patterns
-- **Visual Customization**: Choose from a variety of colors and icons for each habit
 - **Habit Categories**: Organize habits into predefined categories (Health, Productivity, Personal, etc.)
 - **Drag & Drop Ordering**: Customize the order of your habits with intuitive drag-and-drop functionality
 - **Active/Inactive States**: Temporarily disable habits without losing historical data
@@ -37,27 +37,24 @@ A beautiful, intuitive, and feature-rich habit tracking mobile application built
 ### 📊 Analytics & Insights
 - **Streak Tracking**: Monitor current and longest streaks for each habit
 - **Success Rate Analysis**: Detailed completion percentage calculations
-- **Progress Charts**: Visual representation of habit completion over time
-- **Historical Data**: Access complete history of habit completions
-- **Comparative Analytics**: Compare performance across different habits and time periods
 
 ### 🎨 User Experience
+- **Bottom Tab Navigation**: Intuitive navigation between Home, Habits, and Analytics
+- **Stack Navigation**: Smooth transitions between habit screens  
 - **Dark/Light Theme Support**: Automatic theme switching based on system preferences
 - **Smooth Animations**: Enhanced user interactions with React Native Reanimated
 - **Responsive Design**: Optimized for different screen sizes and orientations
-- **Intuitive Navigation**: Bottom tab navigation with clear visual indicators
 - **Safe Area Optimization**: Proper handling of device notches and status bars
 
 ### 💾 Data Management
 - **Local Storage**: Secure data persistence using AsyncStorage
 - **Offline Support**: Full functionality without internet connection
-- **Data Export**: Future support for data backup and restore
-- **Sample Data**: Demo habits for new users to explore the app
 
 ## 🛠️ Technology Stack
 
 ### Core Technologies
 - **React Native** `0.79.5` - Cross-platform mobile development
+- **React** `19.0.0` - UI library
 - **TypeScript** `~5.8.3` - Type-safe JavaScript development
 - **Expo** `~53.0.17` - Development platform and build tools
 
@@ -80,6 +77,7 @@ A beautiful, intuitive, and feature-rich habit tracking mobile application built
 - **AsyncStorage** `2.1.2` - Local data persistence
 - **React Native Draggable FlatList** `^4.0.3` - Drag-and-drop functionality
 - **React Native Animatable** `^1.4.0` - Pre-built animation components
+- **Expo Dev Client** `~5.2.4` - Development build support
 
 ## 🚀 Getting Started
 
@@ -109,28 +107,32 @@ A beautiful, intuitive, and feature-rich habit tracking mobile application built
    npm start
    # or
    yarn start
+   
+   # For Expo Go mode
+   npm run expogo
    ```
 
 4. **Run on your device**
    - Install the **Expo Go** app on your mobile device
    - Scan the QR code displayed in your terminal or browser
-   - Alternatively, use an emulator:
+   - Alternatively, use platform-specific commands:
      ```bash
      npm run android  # For Android emulator
      npm run ios      # For iOS simulator (macOS only)
+     npm run web      # For web browser
      ```
 
-### Quick Start with Expo Go
+### Quick Start with VS Code
 For the fastest setup experience, use the included VS Code task:
 - Open the project in VS Code
 - Use the command palette (`Ctrl+Shift+P`) and run "Tasks: Run Task"
-- Select "Start Expo Go Mode" to automatically start with Expo Go optimization
+- Select "Start Expo Go Mode" to automatically start with `expo start --clear --go`
 
 ## 📁 Project Structure
 
 ```
 HabitTrackerExpo/
-├── 📱 App.tsx                 # Main application component
+├── 📱 App.tsx                 # Main application component with navigation
 ├── 📋 index.ts                # Entry point
 ├── ⚙️ app.json                # Expo configuration
 ├── 🔧 package.json            # Dependencies and scripts
@@ -138,9 +140,17 @@ HabitTrackerExpo/
 ├── 🎨 babel.config.js         # Babel configuration
 ├── 🚀 eas.json                # Expo Application Services config
 ├── 🖼️ assets/                 # App icons, splash screens, images
-│   ├── icon.png
-│   ├── splash-icon.png
-│   └── adaptive-icon.png
+│   ├── icon.png               # App icon
+│   ├── icon.svg               # Vector app icon
+│   ├── splash-icon.png        # Splash screen icon
+│   ├── splash.svg             # Vector splash
+│   ├── adaptive-icon.png      # Android adaptive icon
+│   ├── favicon.png            # Web favicon
+│   └── preview/               # App screenshots
+│       ├── home.jpg
+│       ├── habitsManager.jpg
+│       ├── addHabit.jpg
+│       └── ... (more screenshots)
 └── 📦 src/
     ├── 🧩 components/         # Reusable UI components
     │   ├── HabitCard.tsx      # Individual habit display component
@@ -148,7 +158,7 @@ HabitTrackerExpo/
     ├── 📊 constants/          # App constants and configurations
     │   └── habitCategories.ts # Predefined habit categories
     ├── 🧭 navigation/         # Navigation configuration
-    │   └── HabitsStackNavigator.tsx
+    │   └── HabitsStackNavigator.tsx # Stack navigation for habits
     ├── 📱 screens/            # Main application screens
     │   ├── HomeScreen.tsx     # Dashboard and overview
     │   ├── HabitsScreen.tsx   # Habit list and management
@@ -174,21 +184,18 @@ HabitTrackerExpo/
 ### Expo Configuration
 The app is configured through `app.json` with:
 - Custom app icons and splash screens
-- Proper orientation settings
-- Status bar styling
-- Build configurations for different platforms
+- Portrait orientation lock
+- Proper status bar styling
+- Android adaptive icon support
+- iOS tablet compatibility
+- Web favicon support
+- Package identifier: `com.ousaro.HabitTracker`
 
 ### TypeScript Configuration
-Strict TypeScript configuration with:
-- Path mapping for cleaner imports
-- Strict type checking
-- React Native and Expo type definitions
-
-### Build Configuration
-EAS (Expo Application Services) configuration for:
-- Development builds
-- Preview releases
-- Production builds for app stores
+Minimal TypeScript configuration extending Expo's base:
+- Strict type checking enabled
+- Skip lib check for faster compilation
+- Full React Native and Expo type definitions
 
 ## 📊 Key Features Breakdown
 
@@ -210,6 +217,29 @@ interface Habit {
   completionPercentage?: number; // Current completion rate
   order?: number;                // Custom sorting order
 }
+
+interface HabitEntry {
+  id: string;                    // Entry identifier
+  habitId: string;              // Reference to habit
+  date: string;                 // YYYY-MM-DD format
+  completed: boolean;           // Completion status
+  completedAt?: string;         // Completion timestamp
+  notes?: string;               // Optional notes
+}
+
+interface DashboardData {
+  totalHabits: number;
+  activeHabits: number;
+  todayCompletions: number;
+  todayTarget: number;
+  weeklyProgress: number;
+  monthlyProgress: number;
+  topStreaks: Array<{
+    habitName: string;
+    streak: number;
+    color: string;
+  }>;
+}
 ```
 
 ### Analytics Capabilities
@@ -223,7 +253,6 @@ interface Habit {
 - **Local-First Approach**: All data stored locally using AsyncStorage
 - **Efficient Data Structure**: Optimized JSON storage for performance
 - **Migration Support**: Future-proof data structure for updates
-- **Backup Ready**: Structured for easy export/import functionality
 
 ## 🎯 Usage Guide
 
@@ -264,77 +293,25 @@ interface Habit {
 
 ## 🔮 Roadmap & Future Features
 
-### Near-term Enhancements (v1.1)
+### Enhancements
 - [ ] **Push Notifications**: Habit reminders and motivational messages
 - [ ] **Widget Support**: Home screen widgets for quick habit checking
 - [ ] **Data Export/Import**: Backup and restore functionality
-- [ ] **Habit Templates**: Pre-built habit templates for common goals
-
-### Medium-term Features (v1.2)
 - [ ] **Social Features**: Share progress with friends and family
 - [ ] **Habit Challenges**: Time-limited challenges and goals
 - [ ] **Advanced Analytics**: Machine learning insights and predictions
 - [ ] **Integration APIs**: Connect with fitness trackers and health apps
-
-### Long-term Vision (v2.0)
 - [ ] **Cloud Sync**: Optional cloud synchronization across devices
-- [ ] **Community Features**: Public habit tracking and motivation
 - [ ] **Gamification**: Points, badges, and achievement systems
-- [ ] **AI Coaching**: Personalized habit formation recommendations
 
-## 🤝 Contributing
-
-We welcome contributions to make HabitTracker even better! Here's how you can help:
-
-### Development Setup
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes and test thoroughly
-4. Commit with clear messages: `git commit -m 'Add amazing feature'`
-5. Push to your branch: `git push origin feature/amazing-feature`
-6. Create a Pull Request
-
-### Contribution Guidelines
-- Follow the existing code style and TypeScript conventions
-- Add tests for new features
-- Update documentation for significant changes
-- Ensure all existing tests pass
-- Keep commits focused and atomic
-
-### Areas for Contribution
-- 🐛 **Bug Fixes**: Help identify and resolve issues
-- ✨ **New Features**: Implement items from the roadmap
-- 📚 **Documentation**: Improve guides and API documentation
-- 🎨 **UI/UX**: Design improvements and accessibility enhancements
-- 🧪 **Testing**: Increase test coverage and quality
-- 🌐 **Localization**: Add support for additional languages
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
-
-- **Expo Team** for the excellent development platform
-- **React Native Community** for the robust ecosystem
-- **Open Source Contributors** whose libraries make this app possible
-- **Beta Testers** who provided valuable feedback during development
-
-## 📞 Support & Contact
-
-- **GitHub Issues**: [Report bugs or request features](https://github.com/ousaro/HabitTracker/issues)
-- **Discussions**: [Join community discussions](https://github.com/ousaro/HabitTracker/discussions)
-- **Email**: [Contact the developer](mailto:your-email@example.com)
-
-## 🔗 Links
-
-- **Live Demo**: [Expo Snack Preview](https://snack.expo.dev/@yourusername/habittracker)
-- **Download**: [Get it on Google Play](#) | [Download on App Store](#)
-- **Website**: [Project Homepage](#)
-- **Documentation**: [Full API Documentation](#)
 
 ---
 
-**Built with ❤️ by [Your Name](https://github.com/ousaro)**
+**Built with ❤️ by [ousaro](https://github.com/ousaro)**
 
 *Start building better habits today with HabitTracker!*
