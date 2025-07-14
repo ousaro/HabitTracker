@@ -36,4 +36,7 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# Documentation (educational guides - exclude from git)
+docs/
+
 .fake
