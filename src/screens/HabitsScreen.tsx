@@ -100,6 +100,7 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
                 styles.habitItem, 
                 { 
                   backgroundColor: theme.colors.surface,
+                  borderRadius: 16,
                 }
               ]}
             >
@@ -111,46 +112,43 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
           style={styles.habitTouchable}
           disabled={isDragging}
         >
-        <LinearGradient
-          colors={habit.isActive ? [habit.color, `${habit.color}CC`] : ['#f1f5f9', '#e2e8f0']}
+        <View
           style={[
             styles.habitCard,
             isDragMode && styles.habitCardDragMode,
             isDragging && styles.habitCardDragging
           ]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
         >
           <View style={styles.habitContent}>
             <View style={[
               styles.iconContainer,
-              { backgroundColor: habit.isActive ? 'rgba(255,255,255,0.2)' : `${habit.color}20` }
+              { backgroundColor: !habit.isActive ? 'rgba(255,255,255,0.2)' : `${habit.color}20` }
             ]}>
               <MaterialIcons
                 name={habit.icon as any}
                 size={24}
-                color={habit.isActive ? '#ffffff' : habit.color}
+                color={!habit.isActive ? '#ffffff' : habit.color}
               />
             </View>
             
             <View style={styles.habitInfo}>
               <Text style={[
                 styles.habitName,
-                { color: habit.isActive ? '#ffffff' : theme.colors.text }
+                { color: !habit.isActive ? '#ffffff' : theme.colors.text }
               ]}>
                 {habit.name}
               </Text>
               {habit.description && (
                 <Text style={[
                   styles.habitDescription,
-                  { color: habit.isActive ? 'rgba(255,255,255,0.8)' : theme.colors.textSecondary }
+                  { color: !habit.isActive ? 'rgba(255,255,255,0.8)' : theme.colors.textSecondary }
                 ]}>
                   {habit.description}
                 </Text>
               )}
               <Text style={[
                 styles.habitFrequency,
-                { color: habit.isActive ? 'rgba(255,255,255,0.7)' : theme.colors.textSecondary }
+                { color: !habit.isActive ? 'rgba(255,255,255,0.7)' : theme.colors.textSecondary }
               ]}>
                 {habit.frequency.charAt(0).toUpperCase() + habit.frequency.slice(1)}
                 {habit.frequency === 'weekly' && habit.targetDays && 
@@ -163,7 +161,7 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
               {isDragMode && (
                 <View style={[
                   styles.dragHandle,
-                  { backgroundColor: habit.isActive ? 'rgba(255,255,255,0.2)' : `${habit.color}20` }
+                  { backgroundColor: !habit.isActive ? 'rgba(255,255,255,0.2)' : `${habit.color}20` }
                 ]}>
                   <MaterialIcons
                     name="drag-indicator"
@@ -180,13 +178,13 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
                 }}
                 style={[
                   styles.actionButton,
-                  { backgroundColor: habit.isActive ? 'rgba(255,255,255,0.2)' : `${habit.color}20` }
+                  { backgroundColor: !habit.isActive ? 'rgba(255,255,255,0.2)' : `${habit.color}20` }
                 ]}
               >
                 <MaterialIcons
                   name={habit.isActive ? 'pause' : 'play-arrow'}
                   size={20}
-                  color={habit.isActive ? '#ffffff' : habit.color}
+                  color={!habit.isActive ? '#ffffff' : habit.color}
                 />
               </TouchableOpacity>
               
@@ -197,13 +195,13 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
                 }}
                 style={[
                   styles.actionButton,
-                  { backgroundColor: habit.isActive ? 'rgba(255,255,255,0.2)' : `${habit.color}20` }
+                  { backgroundColor: !habit.isActive ? 'rgba(255,255,255,0.2)' : `${habit.color}20` }
                 ]}
               >
                 <MaterialIcons
                   name="edit"
                   size={20}
-                  color={habit.isActive ? '#ffffff' : habit.color}
+                  color={!habit.isActive ? '#ffffff' : habit.color}
                 />
               </TouchableOpacity>
               
@@ -214,18 +212,18 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
                 }}
                 style={[
                   styles.actionButton,
-                  { backgroundColor: habit.isActive ? 'rgba(255,255,255,0.2)' : '#ef444420' }
+                  { backgroundColor: !habit.isActive ? 'rgba(255,255,255,0.2)' : '#ef444420' }
                 ]}
               >
                 <MaterialIcons
                   name="delete"
                   size={20}
-                  color={habit.isActive ? 'rgba(255,255,255,0.8)' : '#ef4444'}
+                  color={!habit.isActive ? 'rgba(255,255,255,0.8)' : '#ef4444'}
                 />
               </TouchableOpacity>
             </View>
           </View>
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
             </Animatable.View>
           </Animated.View>

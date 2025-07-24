@@ -15,6 +15,8 @@ import { AnalyticsScreen } from './src/screens/AnalyticsScreen';
 import { AnalyticsService } from './src/services/AnalyticsService';
 import { ThemeProvider, useTheme } from './src/theme/ThemeProvider';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AlertProvider } from './src/context/AlertContext';
+import { advanceMockDateBy, clearMockDate, setMockDate } from './src/utils/helpers';
 
 const Tab = createBottomTabNavigator();
 
@@ -27,7 +29,9 @@ function AppContent() {
     const initializeApp = async () => {
       await AnalyticsService.calculateStreaks();
     };
-    
+    //setMockDate(Date.now());
+    //advanceMockDateBy({ days:0});
+    //clearMockDate();
     initializeApp();
   }, []);
 
@@ -72,7 +76,7 @@ function AppContent() {
               },
               shadowOpacity: 0.1,
               shadowRadius: 8,
-              height: 70 + insets.bottom,
+              height: 80 + insets.bottom,
               paddingBottom: insets.bottom + 12,
               paddingTop: 12,
               paddingHorizontal: 16,
@@ -127,7 +131,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <AppContent />
+        <AlertProvider>
+          <AppContent />
+        </AlertProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

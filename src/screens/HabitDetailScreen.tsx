@@ -21,7 +21,7 @@ import { HabitStatsService } from '../services/HabitStatsService';
 import { AnalyticsService } from '../services/AnalyticsService';
 import { HabitsStackParamList } from '../navigation/HabitsStackNavigator';
 import { useTheme } from '../theme/ThemeProvider';
-import { formatDate } from '../utils/helpers';
+import { calculateTotalTargetDays, formatDate, getNow, numberToDay } from '../utils/helpers';
 
 const { width } = Dimensions.get('window');
 
@@ -98,7 +98,7 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
       
       // Get recent entries (last 7 days)
       const entries: HabitEntry[] = [];
-      const today = new Date();
+      const today = new Date(getNow());
       
       for (let i = 0; i < 7; i++) {
         const date = new Date(today.getTime() - (i * 24 * 60 * 60 * 1000));
@@ -115,21 +115,13 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
       
       // Calculate total completions and total days
       const allEntries = await StorageService.getAllHabitEntries();
-      const habitEntries = allEntries.filter(entry => entry.habitId === habitId && entry.completed);
-      setTotalCompletions(habitEntries.length);
-      
-      // Calculate total days since habit creation (more accurate calculation)
-      const createdDate = new Date(foundHabit.createdAt);
-      const todayDate = new Date();
-      
-      // Reset time to start of day for accurate day calculation
-      createdDate.setHours(0, 0, 0, 0);
-      todayDate.setHours(0, 0, 0, 0);
-      
-      const timeDiff = todayDate.getTime() - createdDate.getTime();
-      const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1; // +1 to include the creation day
-      setTotalDays(Math.max(1, daysDiff)); // Ensure at least 1 day
-      
+      const habitEntries = allEntries.filter(entry => entry.habitId === habitId);
+      const completedHabitEntries = habitEntries.filter(entry => entry.completed);
+      setTotalCompletions(completedHabitEntries.length);
+
+      const totalTargetDays = calculateTotalTargetDays(foundHabit);
+      setTotalDays(totalTargetDays); 
+
     } catch (error) {
       console.error('Error loading habit data:', error);
     } finally {
@@ -153,10 +145,12 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
     navigation.goBack();
   };
 
+
   const getFrequencyText = (habit: Habit) => {
     if (habit.frequency === 'daily') return 'Daily';
     if (habit.frequency === 'weekly' && habit.targetDays) {
-      return `${habit.targetDays.length} days/week`;
+      const days = habit.targetDays.sort((a, b) => a - b).map(day => numberToDay(day)).join(', ');
+      return `Weekly (${days})`;
     }
     return habit.frequency.charAt(0).toUpperCase() + habit.frequency.slice(1);
   };
@@ -270,7 +264,6 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
               </Text>
             </View>
             <View style={styles.chartStatItem}>
-              <MaterialIcons name="trending-up" size={16} color={habit.color} />
               <Text style={[styles.chartStatText, { color: theme.colors.text, fontWeight: '600' }]}>
                 Success Rate: {totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0}%
               </Text>
@@ -377,7 +370,7 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
           <View style={[styles.weeklyProgress, { backgroundColor: theme.colors.surface }]}>
             {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, dayIndex) => {
               // Get the current week's start (Sunday)
-              const today = new Date();
+              const today = new Date(getNow());
               const currentDayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
               const startOfWeek = new Date(today.getTime() - (currentDayOfWeek * 24 * 60 * 60 * 1000));
               const targetDate = new Date(startOfWeek.getTime() + (dayIndex * 24 * 60 * 60 * 1000));
@@ -387,6 +380,10 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
               const weeklyDataIndex = 6 - daysFromToday; // weeklyData[6] is today, [0] is 6 days ago
               const isCompleted = weeklyDataIndex >= 0 && weeklyDataIndex < 7 && weeklyData[weeklyDataIndex] === 1;
               const isToday = dayIndex === currentDayOfWeek;
+
+               const isTargetDay = habit.frequency === 'weekly' 
+                ? (habit.targetDays && habit.targetDays.includes(dayIndex))
+                : true;
               
               return (
                 <View
@@ -399,7 +396,7 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
                         : theme.colors.background,
                       borderColor: isToday 
                         ? habit.color 
-                        : theme.colors.border,
+                        : isTargetDay ? theme.colors.border : 'transparent',
                       borderWidth: isToday ? 2 : 1,
                     }
                   ]}
@@ -436,10 +433,10 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
               <Text style={[styles.infoValue, { color: theme.colors.text }]}>{habit.category}</Text>
             </View>
             
-            <View style={styles.infoRow}>
+            <View style={[styles.infoRow]}>
               <MaterialIcons name="schedule" size={20} color={theme.colors.textSecondary} />
               <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>Frequency</Text>
-              <Text style={[styles.infoValue, { color: theme.colors.text }]}>
+              <Text style={[styles.infoValue, { color: theme.colors.text, flexWrap: 'wrap', marginLeft: 76 }]}>
                 {getFrequencyText(habit)}
               </Text>
             </View>

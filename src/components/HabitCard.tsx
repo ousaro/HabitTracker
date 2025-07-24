@@ -36,24 +36,18 @@ export const HabitCard: React.FC<HabitCardProps> = ({
   const { theme } = useTheme();
   const isCompleted = entry?.completed || false;
   const category = getCategoryById(habit.category);
-  
-  const getGradientColors = () => {
-    if (isCompleted) {
-      return [habit.color, `${habit.color}CC`];
-    }
-    return [theme.colors.card, theme.colors.surface];
-  };
+  ;
 
   const getTextColor = () => {
-    return isCompleted ? '#ffffff' : theme.colors.text;
+    return !isCompleted ? '#ffffff' : theme.colors.text;
   };
 
   const getIconColor = () => {
-    return isCompleted ? '#ffffff' : habit.color;
+    return !isCompleted ? '#ffffff' : habit.color;
   };
 
   const getSecondaryTextColor = () => {
-    return isCompleted ? 'rgba(255,255,255,0.8)' : theme.colors.textSecondary;
+    return !isCompleted ? 'rgba(255,255,255,0.8)' : theme.colors.textSecondary;
   };
 
   return (
@@ -68,11 +62,11 @@ export const HabitCard: React.FC<HabitCardProps> = ({
         activeOpacity={0.8}
         style={styles.touchable}
       >
-        <LinearGradient
-          colors={getGradientColors() as any}
-          style={[styles.card, { borderColor: theme.colors.border }]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+        <View
+          style={[styles.card, { 
+                backgroundColor: theme.colors.surface,
+                borderRadius: 16,
+            }]}
         >
           <View style={styles.content}>
             <View style={styles.leftContent}>
@@ -112,8 +106,8 @@ export const HabitCard: React.FC<HabitCardProps> = ({
                 style={[
                   styles.checkButton,
                   {
-                    backgroundColor: isCompleted ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.05)',
-                    borderColor: isCompleted ? 'rgba(255,255,255,0.5)' : habit.color,
+                    backgroundColor: isCompleted ? `${habit.color}40` : 'rgba(0,0,0,0.05)',
+                    borderColor: !isCompleted ? 'rgba(255,255,255,0.5)' : habit.color,
                   }
                 ]}
               >
@@ -129,7 +123,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
               )}
             </View>
           </View>
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
     </Animatable.View>
   );

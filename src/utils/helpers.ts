@@ -1,3 +1,5 @@
+import { Habit } from "../types";
+
 export const formatDate = (date: Date): string => {
   return date.toISOString().split('T')[0];
 };
@@ -29,28 +31,28 @@ export const getShortDayName = (date: Date): string => {
 
 export const getWeekDays = (): Array<{name: string, shortName: string, index: number}> => {
   return [
-    { name: 'Sunday', shortName: 'Sun', index: 0 },
-    { name: 'Monday', shortName: 'Mon', index: 1 },
-    { name: 'Tuesday', shortName: 'Tue', index: 2 },
-    { name: 'Wednesday', shortName: 'Wed', index: 3 },
-    { name: 'Thursday', shortName: 'Thu', index: 4 },
-    { name: 'Friday', shortName: 'Fri', index: 5 },
-    { name: 'Saturday', shortName: 'Sat', index: 6 },
+    { name: 'Sunday', shortName: 'Su', index: 0 },
+    { name: 'Monday', shortName: 'M', index: 1 },
+    { name: 'Tuesday', shortName: 'Tu', index: 2 },
+    { name: 'Wednesday', shortName: 'W', index: 3 },
+    { name: 'Thursday', shortName: 'Th', index: 4 },
+    { name: 'Friday', shortName: 'F', index: 5 },
+    { name: 'Saturday', shortName: 'Sa', index: 6 },
   ];
 };
 
 export const isToday = (dateString: string): boolean => {
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date(getNow()).toISOString().split('T')[0];
   return dateString === today;
 };
 
 export const isYesterday = (dateString: string): boolean => {
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const yesterday = new Date(getNow() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   return dateString === yesterday;
 };
 
 export const generateId = (): string => {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  return getNow().toString(36) + Math.random().toString(36).substr(2);
 };
 
 export const getRandomColor = (): string => {
@@ -110,7 +112,7 @@ export const getStreakMessage = (streak: number): string => {
 };
 
 export const shouldShowHabitToday = (habit: any): boolean => {
-  const today = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const today = new Date(getNow()).getDay(); // 0 = Sunday, 1 = Monday, etc.
   
   if (habit.frequency === 'daily') {
     return true;
@@ -122,3 +124,96 @@ export const shouldShowHabitToday = (habit: any): boolean => {
   
   return false;
 };
+
+export const numberToDay = (day: number): string => {
+  if (day < 0 || day > 6) {
+    throw new Error('Day must be between 0 (Sunday) and 6 (Saturday)');
+  }
+  // Convert 0-6 to 1-7 (Sunday = 1, Saturday = 7)
+  if (day === 0) return "Sunday"; // Sunday should be 7
+  if (day === 1) return "Monday";
+  if (day === 2) return "Tuesday";
+  if (day === 3) return "Wednesday";
+  if (day === 4) return "Thursday";
+  if (day === 5) return "Friday";
+  if (day === 6) return "Saturday";
+  return "";
+};
+
+
+export const calculateTotalTargetDays = (habit: Habit): number => {
+  const createdDate = new Date(habit.createdAt);
+  const todayDate = new Date(getNow());
+  
+  // Work in UTC to avoid timezone issues
+  const createdUTC = new Date(createdDate.getTime());
+  const todayUTC = new Date(todayDate.getTime());
+  
+  // Reset to start of day in UTC
+  createdUTC.setUTCHours(0, 0, 0, 0);
+  todayUTC.setUTCHours(0, 0, 0, 0);
+  
+  if (habit.frequency === 'daily') {
+    // For daily habits, count all calendar days
+    const timeDiff = todayUTC.getTime() - createdUTC.getTime();
+    const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1; // +1 to include creation day
+    return Math.max(1, daysDiff);
+  }
+  
+  if (habit.frequency === 'weekly' && habit.targetDays && habit.targetDays.length > 0) {
+    // For weekly habits, count only target days
+    let totalTargetDays = 0;
+    const currentUTC = new Date(createdUTC.getTime());
+    
+    // Iterate through each day from creation to today
+    while (currentUTC <= todayUTC) {
+      const dayOfWeek = currentUTC.getUTCDay(); // Use UTC day (0 = Sunday, 1 = Monday, etc.)
+      
+      // Check if this day is a target day
+      if (habit.targetDays.includes(dayOfWeek)) {
+        totalTargetDays++;
+      }
+      
+      // Move to next day in UTC
+      currentUTC.setUTCDate(currentUTC.getUTCDate() + 1);
+    }
+    
+    return Math.max(1, totalTargetDays);
+  }
+  
+  // Fallback to calendar days
+  const timeDiff = todayUTC.getTime() - createdUTC.getTime();
+  const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1;
+  return Math.max(1, daysDiff);
+};
+
+
+let mockedDate: number | null = null;
+
+export function setMockDate(fakeTime: number | string | Date) {
+  mockedDate = typeof fakeTime === 'number' ? fakeTime : new Date(fakeTime).getTime();
+}
+
+export function clearMockDate() {
+  mockedDate = null;
+}
+
+export function getNow(): number {
+  return mockedDate ?? Date.now();
+}
+
+export function getToday(): Date {
+  return new Date(getNow());
+}
+
+export function advanceMockDateBy({ days = 0, hours = 0, minutes = 0, ms = 0 }) {
+  if (mockedDate === null) {
+    mockedDate = Date.now(); // fallback to current date if not set
+  }
+
+  mockedDate +=
+    days * 24 * 60 * 60 * 1000 +
+    hours * 60 * 60 * 1000 +
+    minutes * 60 * 1000 +
+    ms;
+}

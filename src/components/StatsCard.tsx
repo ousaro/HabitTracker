@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
+import { useTheme } from '../theme/ThemeProvider';
 
 interface StatsCardProps {
   title: string;
@@ -21,6 +22,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   subtitle,
   animationDelay = 0,
 }) => {
+  const { theme } = useTheme();
   return (
     <Animatable.View
       animation="fadeInUp"
@@ -28,14 +30,14 @@ export const StatsCard: React.FC<StatsCardProps> = ({
       duration={600}
       style={styles.container}
     >
-      <LinearGradient
-        colors={[color, `${color}CC`]}
-        style={styles.card}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+      <View
+        style={[styles.card, { 
+                backgroundColor: theme.colors.surface,
+                borderRadius: 16,
+            }]}
       >
-        <View style={styles.iconContainer}>
-          <MaterialIcons name={icon as any} size={24} color="#ffffff" />
+        <View style={[styles.iconContainer, { backgroundColor: `${color}30` }]}>
+          <MaterialIcons name={icon as any} size={24} color={color} />
         </View>
         
         <View style={styles.content}>
@@ -45,7 +47,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
             <Text style={styles.subtitle}>{subtitle}</Text>
           )}
         </View>
-      </LinearGradient>
+      </View>
     </Animatable.View>
   );
 };

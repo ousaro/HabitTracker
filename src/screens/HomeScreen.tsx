@@ -19,7 +19,7 @@ import { AnalyticsService } from '../services/AnalyticsService';
 import { HabitStatsService } from '../services/HabitStatsService';
 import { HabitCard } from '../components/HabitCard';
 import { StatsCard } from '../components/StatsCard';
-import { formatDate, shouldShowHabitToday, generateId } from '../utils/helpers';
+import { formatDate, shouldShowHabitToday, generateId, getNow } from '../utils/helpers';
 import { useTheme } from '../theme/ThemeProvider';
 
 export const HomeScreen: React.FC = () => {
@@ -32,7 +32,7 @@ export const HomeScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const today = formatDate(new Date());
+  const today = formatDate(new Date(getNow()));
 
   const loadData = useCallback(async () => {
     try {
@@ -99,11 +99,11 @@ export const HomeScreen: React.FC = () => {
         habitId: habit.id,
         date: today,
         completed: isCompleted,
-        completedAt: isCompleted ? new Date().toISOString() : undefined,
+        completedAt: isCompleted ? new Date(getNow()).toISOString() : undefined,
       };
 
       await StorageService.addHabitEntry(entry);
-      await AnalyticsService.updateHabitStreak(habit.id, isCompleted, today);
+      await AnalyticsService.updateHabitStreak(habit.id);
       
       // Update local state
       const updatedEntries = existingEntry
@@ -157,7 +157,7 @@ export const HomeScreen: React.FC = () => {
           <View>
             <Text style={styles.welcomeText}>Good morning!</Text>
             <Text style={styles.dateText}>
-              {new Date().toLocaleDateString('en-US', {
+              {new Date(getNow()).toLocaleDateString('en-US', {
                 weekday: 'long',
                 month: 'long',
                 day: 'numeric',

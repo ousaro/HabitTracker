@@ -5,7 +5,7 @@ export interface Habit {
   color: string;
   icon: string;
   category: string;
-  frequency: 'daily' | 'weekly' | 'custom';
+  frequency: 'daily' | 'weekly';
   targetDays?: number[]; // For weekly: [0,1,2,3,4,5,6] where 0 = Sunday
   targetCount?: number; // For custom frequency
   reminderTime?: string; // HH:MM format

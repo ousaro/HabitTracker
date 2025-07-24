@@ -1,6 +1,6 @@
 import { StorageService } from './StorageService';
 import { Habit, HabitEntry } from '../types';
-import { formatDate } from '../utils/helpers';
+import { formatDate, getNow } from '../utils/helpers';
 
 export class HabitStatsService {
   /**
@@ -8,7 +8,7 @@ export class HabitStatsService {
    */
   static async calculateCompletionPercentage(habitId: string): Promise<number> {
     try {
-      const today = new Date();
+      const today = new Date(getNow());
       const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
       
       let totalExpectedDays = 0;
@@ -83,7 +83,7 @@ export class HabitStatsService {
    */
   static async getWeeklyCompletionData(habitId: string): Promise<number[]> {
     try {
-      const today = new Date();
+      const today = new Date(getNow());
       const weekData: number[] = [];
       
       for (let i = 6; i >= 0; i--) {

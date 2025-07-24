@@ -1,4 +1,5 @@
 import { Habit, HabitEntry, HabitStreak, HabitStats, DashboardData } from '../types';
+import { getNow, shouldShowHabitToday } from '../utils/helpers';
 import { StorageService } from './StorageService';
 
 export class AnalyticsService {
@@ -6,7 +7,7 @@ export class AnalyticsService {
     const entries = await StorageService.getHabitEntriesForHabit(habitId);
     const streak = await StorageService.getHabitStreak(habitId);
     
-    const now = new Date();
+    const now = new Date(getNow());
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     
@@ -34,7 +35,7 @@ export class AnalyticsService {
       habitId,
       currentStreak: 0,
       longestStreak: 0,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date(getNow()).toISOString()
     };
     
     return {
@@ -48,109 +49,220 @@ export class AnalyticsService {
     };
   }
 
-  static async updateHabitStreak(habitId: string, completed: boolean, date: string): Promise<void> {
-    let streak = await StorageService.getHabitStreak(habitId);
-    
-    if (!streak) {
-      streak = {
-        habitId,
-        currentStreak: 0,
-        longestStreak: 0,
-        lastUpdated: date
-      };
+  static async updateHabitStreak(habitId: string): Promise<void> {
+     const habit = await StorageService.getHabits().then(habits => habits.find(h => h.id === habitId));
+      if (!habit) return;
+
+    if(habit.frequency === 'daily'){
+      await this.calculateDailyStreak(habit);
+
+    } else if (habit.frequency === 'weekly') {
+      // For weekly habits, recalculate streaks based on weekly completion
+      await this.calculateWeeklyStreak(habit);
+      
     }
     
-    const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    
-    if (completed) {
-      if (date === today || date === yesterday) {
-        streak.currentStreak += 1;
-        if (streak.currentStreak > streak.longestStreak) {
-          streak.longestStreak = streak.currentStreak;
-        }
-      }
-    } else {
-      // If uncompleting today's habit, decrease current streak
-      if (date === today && streak.currentStreak > 0) {
-        streak.currentStreak -= 1;
-      }
-    }
-    
-    streak.lastUpdated = new Date().toISOString();
-    await StorageService.updateHabitStreak(streak);
+   
   }
 
   static async calculateStreaks(): Promise<void> {
     const habits = await StorageService.getHabits();
     
     for (const habit of habits) {
-      const entries = await StorageService.getHabitEntriesForHabit(habit.id);
-      const sortedEntries = entries
-        .filter(e => e.completed)
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      
-      let currentStreak = 0;
-      let longestStreak = 0;
-      let tempStreak = 0;
-      
-      if (sortedEntries.length > 0) {
-        const today = new Date().toISOString().split('T')[0];
-        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        
-        // Calculate streaks
-        for (let i = 0; i < sortedEntries.length; i++) {
-          const currentDate = sortedEntries[i].date;
-          const prevDate = i > 0 ? sortedEntries[i - 1].date : null;
-          
-          if (prevDate) {
-            const daysDiff = Math.floor(
-              (new Date(currentDate).getTime() - new Date(prevDate).getTime()) / (24 * 60 * 60 * 1000)
-            );
-            
-            if (daysDiff === 1) {
-              tempStreak += 1;
-            } else {
-              tempStreak = 1;
-            }
+      if (habit.frequency === 'daily') {
+        await this.calculateDailyStreak(habit);
+      } else if (habit.frequency === 'weekly') {
+        await this.calculateWeeklyStreak(habit);
+      }
+    }
+  }
+
+
+  static async calculateDailyStreak(habit: Habit): Promise<void> {
+    const entries = await StorageService.getHabitEntriesForHabit(habit.id);
+    const sortedEntries = entries
+      .filter(e => e.completed)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    let currentStreak = 0;
+    let longestStreak = 0;
+    let tempStreak = 0;
+
+    if (sortedEntries.length > 0) {
+      const today = new Date(getNow()).toISOString().split('T')[0];
+      const yesterday = new Date(getNow() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+      // Calculate streaks
+      for (let i = 0; i < sortedEntries.length; i++) {
+        const currentDate = sortedEntries[i].date;
+        const prevDate = i > 0 ? sortedEntries[i - 1].date : null;
+
+        if (prevDate) {
+          const daysDiff = Math.floor(
+            (new Date(currentDate).getTime() - new Date(prevDate).getTime()) / (24 * 60 * 60 * 1000)
+          );
+
+          if (daysDiff === 1) {
+            tempStreak += 1;
           } else {
             tempStreak = 1;
           }
-          
-          if (tempStreak > longestStreak) {
-            longestStreak = tempStreak;
-          }
-          
-          // Check if this entry contributes to current streak
-          if (currentDate === today || currentDate === yesterday) {
-            currentStreak = tempStreak;
-          }
+        } else {
+          tempStreak = 1;
         }
-        
-        // If the latest entry is not today or yesterday, current streak is 0
-        const latestEntry = sortedEntries[sortedEntries.length - 1];
-        if (latestEntry.date !== today && latestEntry.date !== yesterday) {
-          currentStreak = 0;
+
+        if (tempStreak > longestStreak) {
+          longestStreak = tempStreak;
+        }
+
+        // Check if this entry contributes to current streak
+        if (currentDate === today || currentDate === yesterday) {
+          currentStreak = tempStreak;
         }
       }
-      
+
+      // If the latest entry is not today or yesterday, current streak is 0
+      const latestEntry = sortedEntries[sortedEntries.length - 1];
+      if (latestEntry.date !== today && latestEntry.date !== yesterday) {
+        currentStreak = 0;
+      }
+    }
+
+    const streak: HabitStreak = {
+      habitId: habit.id,
+      currentStreak,
+      longestStreak,
+      lastUpdated: new Date(getNow()).toISOString()
+    };
+
+    await StorageService.updateHabitStreak(streak);
+  }
+
+  static async calculateWeeklyStreak(habit: Habit): Promise<void> {
+    const entries = await StorageService.getHabitEntriesForHabit(habit.id);
+    const targetDays = habit.targetDays || []; // Days of week this habit should be done (0=Sunday, 1=Monday, etc.)
+    
+    if (targetDays.length === 0) {
       const streak: HabitStreak = {
         habitId: habit.id,
-        currentStreak,
-        longestStreak,
-        lastUpdated: new Date().toISOString()
+        currentStreak: 0,
+        longestStreak: 0,
+        lastUpdated: new Date(getNow()).toISOString()
       };
-      
       await StorageService.updateHabitStreak(streak);
+      return;
     }
+
+    let currentStreak = 0;
+    let longestStreak = 0;
+    let tempStreak = 0;
+
+    // Generate all expected target dates from habit creation to today
+    const habitCreated = new Date(habit.createdAt);
+    const today = new Date(getNow());
+    const expectedDates = await this.generateExpectedTargetDates(habitCreated, today, targetDays);
+
+    // Sort expected dates chronologically
+    expectedDates.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    // Process each expected date
+    for (let i = 0; i < expectedDates.length; i++) {
+      const expectedDate = expectedDates[i];
+      const todayDateStr = today.toISOString().split('T')[0];
+      
+      // Skip future dates
+      if (expectedDate > todayDateStr) {
+        break;
+      }
+
+
+      // Check if this date was completed
+      const entry = entries.find(e => e.date === expectedDate);
+      const isCompleted = entry && entry.completed;
+      console.log(`Processing date: ${expectedDate}, Completed: ${isCompleted}`);
+
+      if (isCompleted) {
+        // Completed - increment streak
+        tempStreak++;
+        
+        // Update longest streak if needed
+        if (tempStreak > longestStreak) {
+          longestStreak = tempStreak;
+        }
+        
+        // This becomes current streak since it's the most recent
+        currentStreak = tempStreak;
+      } else {
+        // Missed or not completed - reset streak
+        tempStreak = 0;
+        currentStreak = 0; // Current streak is broken
+      }
+    }
+
+    // Handle edge case: if today is a target day and not completed yet
+    const todayDayOfWeek = today.getDay();
+    const todayDateStr = today.toISOString().split('T')[0];
+    
+    if (targetDays.includes(todayDayOfWeek)) {
+      const todayEntry = entries.find(e => e.date === todayDateStr);
+      
+      // If today is a target day and it's not completed, the streak should be 0
+      // (unless we want to give them until end of day)
+      if (!todayEntry || !todayEntry.completed) {
+        // You can choose to reset immediately or wait until day ends
+        // For immediate feedback, uncomment the next line:
+        // currentStreak = 0;
+      }
+    }
+
+    const streak: HabitStreak = {
+      habitId: habit.id,
+      currentStreak,
+      longestStreak,
+      lastUpdated: new Date(getNow()).toISOString()
+    };
+
+    console.log(`Updated streak for habit ${habit.name}:`, streak);
+
+    await StorageService.updateHabitStreak(streak);
+  }
+
+  // Generate all expected target dates from start to end
+  static async generateExpectedTargetDates(
+    startDate: Date, 
+    endDate: Date, 
+    targetDays: number[]
+  ): Promise<string[]> {
+    const expectedDates: string[] = [];
+    
+    // Work in UTC to avoid timezone issues
+    const current = new Date(startDate.getTime());
+    const end = new Date(endDate.getTime());
+    
+    // Reset to start of day in UTC
+    current.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
+
+    while (current <= end) {
+      const dayOfWeek = current.getUTCDay(); // Use UTC day
+      
+      // If current day is a target day, add it to expected dates
+      if (targetDays.includes(dayOfWeek)) {
+        expectedDates.push(current.toISOString().split('T')[0]);
+      }
+      
+      // Move to next day in UTC
+      current.setUTCDate(current.getUTCDate() + 1);
+    }
+
+    return expectedDates;
   }
 
   static async getDashboardData(): Promise<DashboardData> {
     const habits = await StorageService.getHabits();
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date(getNow()).toISOString().split('T')[0];
     const todayEntries = await StorageService.getHabitEntriesForDate(today);
     
-    const activeHabits = habits.filter(h => h.isActive);
+    const activeHabits = habits.filter(h => h.isActive && shouldShowHabitToday(h));
     const totalHabits = habits.length;
     const todayCompletions = todayEntries.filter(e => e.completed).length;
     const todayTarget = activeHabits.length;
@@ -158,7 +270,7 @@ export class AnalyticsService {
     // Calculate weekly progress
     const weeklyEntries: HabitEntry[] = [];
     for (let i = 0; i < 7; i++) {
-      const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const date = new Date(getNow() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       const dayEntries = await StorageService.getHabitEntriesForDate(date);
       weeklyEntries.push(...dayEntries);
     }
@@ -170,7 +282,7 @@ export class AnalyticsService {
     // Calculate monthly progress
     const monthlyEntries: HabitEntry[] = [];
     for (let i = 0; i < 30; i++) {
-      const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const date = new Date(getNow() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       const dayEntries = await StorageService.getHabitEntriesForDate(date);
       monthlyEntries.push(...dayEntries);
     }
@@ -211,7 +323,7 @@ export class AnalyticsService {
   static getDateRange(days: number): string[] {
     const dates: string[] = [];
     for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+      const date = new Date(getNow() - i * 24 * 60 * 60 * 1000);
       dates.push(date.toISOString().split('T')[0]);
     }
     return dates;

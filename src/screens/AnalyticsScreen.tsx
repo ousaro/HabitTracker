@@ -13,6 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Habit, HabitEntry } from '../types';
 import { StorageService } from '../services/StorageService';
 import { useTheme } from '../theme/ThemeProvider';
+import { getNow } from '../utils/helpers';
 
 const { width } = Dimensions.get('window');
 
@@ -44,7 +45,7 @@ export const AnalyticsScreen: React.FC = () => {
   );
 
   const calculateStats = () => {
-    const now = new Date();
+    const now = new Date(getNow());
     const weekStart = new Date(now);
     weekStart.setDate(now.getDate() - 7);
     const monthStart = new Date(now);

@@ -15,6 +15,13 @@ export const HABIT_CATEGORIES: HabitCategory[] = [
     description: 'Learning and educational activities'
   },
   {
+    id: 'religion',
+    name: 'Religion',
+    icon: 'mosque',
+    color: '#AB47BC', // Purple Habit
+    description: 'Spiritual and religious practices'
+  },
+  {
     id: 'sport',
     name: 'Sport',
     icon: 'fitness-center',
@@ -27,13 +34,6 @@ export const HABIT_CATEGORIES: HabitCategory[] = [
     icon: 'cancel',
     color: '#EF5350', // Red Habit
     description: 'Breaking negative habits'
-  },
-  {
-    id: 'meditation',
-    name: 'Meditation',
-    icon: 'self-improvement',
-    color: '#AB47BC', // Purple Habit
-    description: 'Mindfulness and mental wellness'
   },
   {
     id: 'art',

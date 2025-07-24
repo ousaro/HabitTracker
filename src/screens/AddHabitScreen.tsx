@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,12 +14,13 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { Habit } from '../types';
 import { StorageService } from '../services/StorageService';
-import { generateId, getWeekDays } from '../utils/helpers';
+import { generateId, getNow, getWeekDays } from '../utils/helpers';
 import { HabitsStackParamList } from '../navigation/HabitsStackNavigator';
 import { useTheme } from '../theme/ThemeProvider';
 import { HABIT_CATEGORIES, getCategoryById, HabitCategory } from '../constants/habitCategories';
+import { useAlert } from '../context/AlertContext';
 
-type AddHabitScreenNavigationProp = StackNavigationProp<HabitsStackParamList, 'AddHabit' | 'EditHabit'>;
+type AddHabitScreenNavigationProp = StackNavigationProp<HabitsStackParamList, 'AddHabit' | 'EditHabit' | 'HabitDetail'>;
 type AddHabitScreenRouteProp = RouteProp<HabitsStackParamList, 'AddHabit' | 'EditHabit'>;
 
 interface Props {
@@ -29,7 +30,7 @@ interface Props {
 
 export const AddHabitScreen: React.FC<Props> = ({ navigation, route }) => {
   const { theme } = useTheme();
-  
+  const alert = useAlert();
   // Check if we're editing an existing habit
   const editingHabit = route.params && 'habit' in route.params ? route.params.habit : null;
   const isEditing = !!editingHabit;
@@ -39,7 +40,7 @@ export const AddHabitScreen: React.FC<Props> = ({ navigation, route }) => {
   const [selectedCategory, setSelectedCategory] = useState<HabitCategory>(
     editingHabit ? getCategoryById(editingHabit.category) || HABIT_CATEGORIES[0] : HABIT_CATEGORIES[0]
   );
-  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'custom'>(editingHabit?.frequency || 'daily');
+  const [frequency, setFrequency] = useState<'daily' | 'weekly'>(editingHabit?.frequency || 'daily');
   const [selectedDays, setSelectedDays] = useState<number[]>(editingHabit?.targetDays || []);
   const [reminderTime, setReminderTime] = useState(editingHabit?.reminderTime || '');
   const [loading, setLoading] = useState(false);
@@ -49,12 +50,20 @@ export const AddHabitScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Error', 'Please enter a habit name');
+      alert({
+        type: 'error',
+        title: 'Error',
+        message: 'Please enter a habit name',
+      });
       return;
     }
 
     if (frequency === 'weekly' && selectedDays.length === 0) {
-      Alert.alert('Error', 'Please select at least one day for weekly habits');
+      alert({
+        type: 'error',
+        title: 'Error',
+        message: 'Please select at least one day for weekly habits',
+      });
       return;
     }
 
@@ -81,31 +90,38 @@ export const AddHabitScreen: React.FC<Props> = ({ navigation, route }) => {
           ...habitData,
         };
         await StorageService.updateHabit(updatedHabit);
-        
-        Alert.alert(
-          'Success',
-          'Habit updated successfully!',
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
-        );
+
+        alert({
+          type: 'success',
+          title: 'Success',
+          message: 'Habit updated successfully!',
+        });
       } else {
         // Create new habit
         const newHabit: Habit = {
           id: generateId(),
-          createdAt: new Date().toISOString(),
+          createdAt: new Date(getNow()).toISOString(),
           ...habitData,
         };
         
         await StorageService.addHabit(newHabit);
         
-        Alert.alert(
-          'Success',
-          'Habit created successfully!',
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
-        );
+        alert({
+          type: 'success',
+          title: 'Success',
+          message: 'Habit created successfully!',
+          onConfirm: () => {
+            navigation.goBack();
+          }
+        });
       }
     } catch (error) {
       console.error('Error saving habit:', error);
-      Alert.alert('Error', `Failed to ${isEditing ? 'update' : 'create'} habit. Please try again.`);
+      alert({
+        type: 'error',
+        title: 'Error',
+        message: `Failed to ${isEditing ? 'update' : 'create'} habit. Please try again.`,
+      });
     } finally {
       setLoading(false);
     }
