@@ -33,13 +33,13 @@ export const HabitCard: React.FC<HabitCardProps> = ({
   onPress,
   animationDelay = 0,
 }) => {
-  const { theme } = useTheme();
+  const { theme,isDark } = useTheme();
   const isCompleted = entry?.completed || false;
   const category = getCategoryById(habit.category);
   ;
 
   const getTextColor = () => {
-    return !isCompleted ? '#ffffff' : theme.colors.text;
+    return theme.colors.text;
   };
 
   const getIconColor = () => {
@@ -47,15 +47,19 @@ export const HabitCard: React.FC<HabitCardProps> = ({
   };
 
   const getSecondaryTextColor = () => {
-    return !isCompleted ? 'rgba(255,255,255,0.8)' : theme.colors.textSecondary;
+    return theme.colors.textSecondary;
   };
+
+  const getIconContainerColor = () => {
+    return isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+  }
 
   return (
     <Animatable.View
       animation="fadeInUp"
       delay={animationDelay}
       duration={600}
-      style={styles.container}
+      style={[styles.container]}
     >
       <TouchableOpacity
         onPress={() => onToggle(habit)}
@@ -65,12 +69,13 @@ export const HabitCard: React.FC<HabitCardProps> = ({
         <View
           style={[styles.card, { 
                 backgroundColor: theme.colors.surface,
-                borderRadius: 16,
+                shadowColor: theme.colors.shadow,
+                borderColor: 'transparent',
             }]}
         >
           <View style={styles.content}>
             <View style={styles.leftContent}>
-              <View style={[styles.iconContainer, { backgroundColor: isCompleted ? 'rgba(255,255,255,0.2)' : `${habit.color}15` }]}>
+              <View style={[styles.iconContainer, { backgroundColor: !isCompleted ? getIconContainerColor() : `${habit.color}30` }]}>
                 <MaterialIcons
                   name={(category?.icon || habit.icon) as any}
                   size={24}
@@ -140,12 +145,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     elevation: 4,
-    shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 5,
     },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
     borderWidth: 1,
   },

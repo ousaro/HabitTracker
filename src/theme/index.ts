@@ -42,7 +42,7 @@ export const lightTheme: Theme = {
     warning: '#FFA726', // Orange
     error: '#EF5350', // Red
     card: '#FFFFFF',
-    shadow: 'rgba(0, 0, 0, 0.1)',
+    shadow: 'rgba(255, 255, 255, 0.)',
   },
   spacing: {
     xs: 4,
@@ -73,7 +73,7 @@ export const darkTheme: Theme = {
     warning: '#FFA726', // Orange
     error: '#EF5350', // Red
     card: '#1E1E1E',
-    shadow: 'rgba(0, 0, 0, 0.3)',
+    shadow: 'rgba(255, 255, 255, 0.)',
   },
   spacing: {
     xs: 4,

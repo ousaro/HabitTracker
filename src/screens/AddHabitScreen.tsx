@@ -373,23 +373,6 @@ export const AddHabitScreen: React.FC<Props> = ({ navigation, route }) => {
         {renderCategoryPicker()}
         {renderFrequencyPicker()}
 
-        <View style={[styles.section, { backgroundColor: theme.colors.background }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Reminder Time (Optional)</Text>
-          <TextInput
-            style={[
-              styles.textInput,
-              { 
-                backgroundColor: theme.colors.surface,
-                color: theme.colors.text,
-                borderColor: theme.colors.border,
-              }
-            ]}
-            value={reminderTime}
-            onChangeText={setReminderTime}
-            placeholder="HH:MM (e.g., 09:00)"
-            placeholderTextColor={theme.colors.textSecondary}
-          />
-        </View>
       </ScrollView>
 
       <View style={styles.footer}>

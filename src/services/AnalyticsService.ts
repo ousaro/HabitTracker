@@ -178,7 +178,6 @@ export class AnalyticsService {
       // Check if this date was completed
       const entry = entries.find(e => e.date === expectedDate);
       const isCompleted = entry && entry.completed;
-      console.log(`Processing date: ${expectedDate}, Completed: ${isCompleted}`);
 
       if (isCompleted) {
         // Completed - increment streak
@@ -220,8 +219,6 @@ export class AnalyticsService {
       longestStreak,
       lastUpdated: new Date(getNow()).toISOString()
     };
-
-    console.log(`Updated streak for habit ${habit.name}:`, streak);
 
     await StorageService.updateHabitStreak(streak);
   }

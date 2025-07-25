@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,32 +7,35 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
-} from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import * as Animatable from 'react-native-animatable';
+} from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { MaterialIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Animatable from "react-native-animatable";
 import DraggableFlatList, {
   ScaleDecorator,
   ShadowDecorator,
   OpacityDecorator,
   RenderItemParams,
-} from 'react-native-draggable-flatlist';
+} from "react-native-draggable-flatlist";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
   interpolate,
-} from 'react-native-reanimated';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { Habit } from '../types';
-import { StorageService } from '../services/StorageService';
-import { HabitsStackParamList } from '../navigation/HabitsStackNavigator';
-import { useTheme } from '../theme/ThemeProvider';
+} from "react-native-reanimated";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { Habit } from "../types";
+import { StorageService } from "../services/StorageService";
+import { HabitsStackParamList } from "../navigation/HabitsStackNavigator";
+import { useTheme } from "../theme/ThemeProvider";
+import { getNow } from "../utils/helpers";
+import { HabitStatsService } from "../services/HabitStatsService";
 
 interface HabitListItemProps {
   habit: Habit;
+  weeklyData: number[];
   onEdit: (habit: Habit) => void;
   onDelete: (habit: Habit) => void;
   onToggleActive: (habit: Habit) => void;
@@ -45,6 +48,7 @@ interface HabitListItemProps {
 
 const HabitListItem: React.FC<HabitListItemProps> = ({
   habit,
+  weeklyData,
   onEdit,
   onDelete,
   onToggleActive,
@@ -58,12 +62,15 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
 
+
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: scale.value }],
       opacity: opacity.value,
     };
   });
+
+ 
 
   React.useEffect(() => {
     if (isDragging) {
@@ -86,7 +93,7 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
       });
     }
   }, [isDragging]);
-  
+
   return (
     <ScaleDecorator>
       <OpacityDecorator activeOpacity={0.8}>
@@ -97,134 +104,242 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
               delay={animationDelay}
               duration={600}
               style={[
-                styles.habitItem, 
-                { 
+                styles.habitItem,
+                {
                   backgroundColor: theme.colors.surface,
                   borderRadius: 16,
-                }
+                },
               ]}
             >
-        <TouchableOpacity
-          onPress={() => onPress(habit)}
-          onLongPress={isDragMode ? drag : undefined}
-          delayLongPress={isDragMode ? 200 : 500}
-          activeOpacity={0.7}
-          style={styles.habitTouchable}
-          disabled={isDragging}
-        >
-        <View
-          style={[
-            styles.habitCard,
-            isDragMode && styles.habitCardDragMode,
-            isDragging && styles.habitCardDragging
-          ]}
-        >
-          <View style={styles.habitContent}>
-            <View style={[
-              styles.iconContainer,
-              { backgroundColor: !habit.isActive ? 'rgba(255,255,255,0.2)' : `${habit.color}20` }
-            ]}>
-              <MaterialIcons
-                name={habit.icon as any}
-                size={24}
-                color={!habit.isActive ? '#ffffff' : habit.color}
-              />
-            </View>
-            
-            <View style={styles.habitInfo}>
-              <Text style={[
-                styles.habitName,
-                { color: !habit.isActive ? '#ffffff' : theme.colors.text }
-              ]}>
-                {habit.name}
-              </Text>
-              {habit.description && (
-                <Text style={[
-                  styles.habitDescription,
-                  { color: !habit.isActive ? 'rgba(255,255,255,0.8)' : theme.colors.textSecondary }
-                ]}>
-                  {habit.description}
-                </Text>
-              )}
-              <Text style={[
-                styles.habitFrequency,
-                { color: !habit.isActive ? 'rgba(255,255,255,0.7)' : theme.colors.textSecondary }
-              ]}>
-                {habit.frequency.charAt(0).toUpperCase() + habit.frequency.slice(1)}
-                {habit.frequency === 'weekly' && habit.targetDays && 
-                  ` • ${habit.targetDays.length} days/week`
-                }
-              </Text>
-            </View>
-            
-            <View style={styles.habitActions}>
-              {isDragMode && (
-                <View style={[
-                  styles.dragHandle,
-                  { backgroundColor: !habit.isActive ? 'rgba(255,255,255,0.2)' : `${habit.color}20` }
-                ]}>
-                  <MaterialIcons
-                    name="drag-indicator"
-                    size={16}
-                    color={habit.isActive ? 'rgba(255,255,255,0.7)' : habit.color}
-                  />
-                </View>
-              )}
+              <TouchableOpacity
+                onPress={() => onPress(habit)}
+                onLongPress={isDragMode ? drag : undefined}
+                delayLongPress={isDragMode ? 200 : 500}
+                activeOpacity={0.7}
+                style={[styles.habitTouchable]}
+                disabled={isDragging}
+              >
+                <View
+                  style={[
+                    styles.habitCard,
+                    isDragMode && styles.habitCardDragMode,
+                    isDragging && styles.habitCardDragging,
+                    { backgroundColor: theme.colors.surface },
+                  ]}
+                >
+                  <View style={[styles.habitContent]}>
+                    <View
+                      style={[
+                        styles.iconContainer,
+                        {
+                          backgroundColor: !habit.isActive
+                            ? "rgba(255,255,255,0.2)"
+                            : `${habit.color}20`,
+                        },
+                      ]}
+                    >
+                      <MaterialIcons
+                        name={habit.icon as any}
+                        size={24}
+                        color={!habit.isActive ? "#ffffff" : habit.color}
+                      />
+                    </View>
 
-              <TouchableOpacity
-                onPress={(e: any) => {
-                  e.stopPropagation();
-                  onToggleActive(habit);
-                }}
-                style={[
-                  styles.actionButton,
-                  { backgroundColor: !habit.isActive ? 'rgba(255,255,255,0.2)' : `${habit.color}20` }
-                ]}
-              >
-                <MaterialIcons
-                  name={habit.isActive ? 'pause' : 'play-arrow'}
-                  size={20}
-                  color={!habit.isActive ? '#ffffff' : habit.color}
-                />
+                    <View style={styles.habitInfo}>
+                      <Text
+                        style={[
+                          styles.habitName,
+                          {
+                            color: !habit.isActive
+                              ? "#ffffff"
+                              : theme.colors.text,
+                          },
+                        ]}
+                      >
+                        {habit.name}
+                      </Text>
+                      {habit.description && (
+                        <Text
+                          style={[
+                            styles.habitDescription,
+                            {
+                              color: !habit.isActive
+                                ? "rgba(255,255,255,0.8)"
+                                : theme.colors.textSecondary,
+                            },
+                          ]}
+                        >
+                          {habit.description}
+                        </Text>
+                      )}
+                      <Text
+                        style={[
+                          styles.habitFrequency,
+                          {
+                            color: !habit.isActive
+                              ? "rgba(255,255,255,0.7)"
+                              : theme.colors.textSecondary,
+                          },
+                        ]}
+                      >
+                        {habit.frequency.charAt(0).toUpperCase() +
+                          habit.frequency.slice(1)}
+                        {habit.frequency === "weekly" &&
+                          habit.targetDays &&
+                          ` • ${habit.targetDays.length} days/week`}
+                      </Text>
+                    </View>
+
+                    <View style={styles.habitActions}>
+                      {isDragMode && (
+                        <View
+                          style={[
+                            styles.dragHandle,
+                            {
+                              backgroundColor: !habit.isActive
+                                ? "rgba(255,255,255,0.2)"
+                                : `${habit.color}20`,
+                            },
+                          ]}
+                        >
+                          <MaterialIcons
+                            name="drag-indicator"
+                            size={16}
+                            color={
+                              habit.isActive
+                                ? "rgba(255,255,255,0.7)"
+                                : habit.color
+                            }
+                          />
+                        </View>
+                      )}
+
+                      <TouchableOpacity
+                        onPress={(e: any) => {
+                          e.stopPropagation();
+                          onEdit(habit);
+                        }}
+                        style={[
+                          styles.actionButton,
+                          {
+                            backgroundColor: !habit.isActive
+                              ? "rgba(255,255,255,0.2)"
+                              : `${habit.color}20`,
+                          },
+                        ]}
+                      >
+                        <MaterialIcons
+                          name="edit"
+                          size={20}
+                          color={!habit.isActive ? "#ffffff" : habit.color}
+                        />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={(e: any) => {
+                          e.stopPropagation();
+                          onDelete(habit);
+                        }}
+                        style={[
+                          styles.actionButton,
+                          {
+                            backgroundColor: !habit.isActive
+                              ? "rgba(255,255,255,0.2)"
+                              : "#ef444420",
+                          },
+                        ]}
+                      >
+                        <MaterialIcons
+                          name="delete"
+                          size={20}
+                          color={
+                            !habit.isActive
+                              ? "rgba(255,255,255,0.8)"
+                              : "#ef4444"
+                          }
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.weeklyProgress,
+                      { backgroundColor: theme.colors.surface,
+                        shadowColor: 'transparent',
+                       },
+                    ]}
+                  >
+                    {["S", "M", "T", "W", "T", "F", "S"].map(
+                      (day, dayIndex) => {
+                        // Get the current week's start (Sunday)
+                        const today = new Date(getNow());
+                        const currentDayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+                        const startOfWeek = new Date(
+                          today.getTime() -
+                            currentDayOfWeek * 24 * 60 * 60 * 1000
+                        );
+                        const targetDate = new Date(
+                          startOfWeek.getTime() + dayIndex * 24 * 60 * 60 * 1000
+                        );
+
+                        // Find the completion status for this specific day
+                        const daysFromToday = Math.floor(
+                          (today.getTime() - targetDate.getTime()) /
+                            (24 * 60 * 60 * 1000)
+                        );
+                        const weeklyDataIndex = 6 - daysFromToday; // weeklyData[6] is today, [0] is 6 days ago
+                        const isCompleted =
+                          weeklyDataIndex >= 0 &&
+                          weeklyDataIndex < 7 &&
+                          weeklyData[weeklyDataIndex] === 1;
+                        const isToday = dayIndex === currentDayOfWeek;
+
+                        const isTargetDay =
+                          habit.frequency === "weekly"
+                            ? habit.targetDays &&
+                              habit.targetDays.includes(dayIndex)
+                            : true;
+
+                        return (
+                          <View
+                            key={dayIndex}
+                            style={[
+                              styles.dayCircle,
+                              {
+                                backgroundColor: isCompleted
+                                  ? habit.color
+                                  : theme.colors.background,
+                                borderColor: isToday
+                                  ? habit.color
+                                  : isTargetDay
+                                  ? theme.colors.border
+                                  : "transparent",
+                                borderWidth: isToday ? 2 : 1,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.dayText,
+                                {
+                                  color: isCompleted
+                                    ? "#ffffff"
+                                    : isToday
+                                    ? habit.color
+                                    : theme.colors.textSecondary,
+                                },
+                              ]}
+                            >
+                              {day}
+                            </Text>
+                          </View>
+                        );
+                      }
+                    )}
+                  </View>
+                </View>
               </TouchableOpacity>
-              
-              <TouchableOpacity
-                onPress={(e: any) => {
-                  e.stopPropagation();
-                  onEdit(habit);
-                }}
-                style={[
-                  styles.actionButton,
-                  { backgroundColor: !habit.isActive ? 'rgba(255,255,255,0.2)' : `${habit.color}20` }
-                ]}
-              >
-                <MaterialIcons
-                  name="edit"
-                  size={20}
-                  color={!habit.isActive ? '#ffffff' : habit.color}
-                />
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                onPress={(e: any) => {
-                  e.stopPropagation();
-                  onDelete(habit);
-                }}
-                style={[
-                  styles.actionButton,
-                  { backgroundColor: !habit.isActive ? 'rgba(255,255,255,0.2)' : '#ef444420' }
-                ]}
-              >
-                <MaterialIcons
-                  name="delete"
-                  size={20}
-                  color={!habit.isActive ? 'rgba(255,255,255,0.8)' : '#ef4444'}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </TouchableOpacity>
             </Animatable.View>
           </Animated.View>
         </ShadowDecorator>
@@ -233,8 +348,12 @@ const HabitListItem: React.FC<HabitListItemProps> = ({
   );
 };
 
+interface weeklyData {
+  [key: string]: number[];
+}
+
 export const HabitsScreen: React.FC<{
-  navigation: StackNavigationProp<HabitsStackParamList, 'HabitsList'>;
+  navigation: StackNavigationProp<HabitsStackParamList, "HabitsList">;
 }> = ({ navigation }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -242,6 +361,7 @@ export const HabitsScreen: React.FC<{
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isDragMode, setIsDragMode] = useState(false);
+  const [weeklyData, setWeeklyData] = useState<weeklyData>({});
 
   const loadHabits = async () => {
     try {
@@ -253,15 +373,26 @@ export const HabitsScreen: React.FC<{
         }
         if (a.order !== undefined) return -1;
         if (b.order !== undefined) return 1;
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
       });
+      const allWeeklyData: weeklyData = {};
+      await Promise.all(
+        sortedHabits.map(async (habit) => {
+          const data = await HabitStatsService.getWeeklyCompletionData(habit.id);
+          allWeeklyData[habit.id] = data;
+        })
+      );
+      setWeeklyData(allWeeklyData);
       setHabits(sortedHabits);
     } catch (error) {
-      console.error('Error loading habits:', error);
+      console.error("Error loading habits:", error);
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     loadHabits();
@@ -278,32 +409,33 @@ export const HabitsScreen: React.FC<{
     await loadHabits();
     setRefreshing(false);
   }, []);
+
   const handleAddHabit = () => {
-    navigation.navigate('AddHabit');
+    navigation.navigate("AddHabit");
   };
 
   const handleEditHabit = (habit: Habit) => {
-    navigation.navigate('EditHabit', { habit });
+    navigation.navigate("EditHabit", { habit });
   };
 
   const handleDeleteHabit = (habit: Habit) => {
     Alert.alert(
-      'Delete Habit',
+      "Delete Habit",
       `Are you sure you want to delete "${habit.name}"? This action cannot be undone.`,
       [
         {
-          text: 'Cancel',
-          style: 'cancel',
+          text: "Cancel",
+          style: "cancel",
         },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             try {
               await StorageService.deleteHabit(habit.id);
               await loadHabits();
             } catch (error) {
-              console.error('Error deleting habit:', error);
+              console.error("Error deleting habit:", error);
             }
           },
         },
@@ -317,12 +449,12 @@ export const HabitsScreen: React.FC<{
       await StorageService.updateHabit(updatedHabit);
       await loadHabits();
     } catch (error) {
-      console.error('Error toggling habit:', error);
+      console.error("Error toggling habit:", error);
     }
   };
 
   const handleHabitPress = (habit: Habit) => {
-    navigation.navigate('HabitDetail', { habitId: habit.id });
+    navigation.navigate("HabitDetail", { habitId: habit.id });
   };
 
   const handleDragEnd = async ({ data }: { data: Habit[] }) => {
@@ -330,9 +462,14 @@ export const HabitsScreen: React.FC<{
     await StorageService.updateHabitsOrder(data);
   };
 
-  const renderHabitItem = ({ item: habit, drag, isActive }: RenderItemParams<Habit>) => (
+  const renderHabitItem = ({
+    item: habit,
+    drag,
+    isActive,
+  }: RenderItemParams<Habit>) => (
     <HabitListItem
       habit={habit}
+      weeklyData={weeklyData[habit.id]}
       onEdit={handleEditHabit}
       onDelete={handleDeleteHabit}
       onToggleActive={handleToggleActive}
@@ -347,77 +484,103 @@ export const HabitsScreen: React.FC<{
   // Create a single data array with sections
   const createFlatListData = () => {
     const data: any[] = [];
-    
+
     // Add drag mode indicator
     if (isDragMode) {
-      data.push({ type: 'dragIndicator' });
+      data.push({ type: "dragIndicator" });
     }
-    
+
     // Add empty state or habits
     if (habits.length === 0) {
-      data.push({ type: 'emptyState' });
+      data.push({ type: "emptyState" });
     } else {
       // Add active habits section
       if (activeHabits.length > 0) {
-        data.push({ type: 'sectionHeader', title: `Active Habits (${activeHabits.length})` });
-        data.push({ type: 'activeHabits', habits: activeHabits });
-      }
-      
-      // Add inactive habits section  
-      if (inactiveHabits.length > 0) {
-        data.push({ type: 'sectionHeader', title: `Paused Habits (${inactiveHabits.length})` });
-        data.push({ type: 'inactiveHabits', habits: inactiveHabits });
+        data.push({
+          type: "sectionHeader",
+          title: `Active Habits (${activeHabits.length})`,
+        });
+        data.push({ type: "activeHabits", habits: activeHabits });
       }
     }
-    
+
     return data;
   };
 
   const renderFlatListItem = ({ item }: { item: any }) => {
     switch (item.type) {
-      case 'dragIndicator':
+      case "dragIndicator":
         return (
-          <View style={[styles.dragModeIndicator, { backgroundColor: theme.colors.primary + '20' }]}>
-            <MaterialIcons name="drag-indicator" size={16} color={theme.colors.primary} />
-            <Text style={[styles.dragModeText, { color: theme.colors.primary }]}>
+          <View
+            style={[
+              styles.dragModeIndicator,
+              { backgroundColor: theme.colors.primary + "20" },
+            ]}
+          >
+            <MaterialIcons
+              name="drag-indicator"
+              size={16}
+              color={theme.colors.primary}
+            />
+            <Text
+              style={[styles.dragModeText, { color: theme.colors.primary }]}
+            >
               Drag mode active - Long press and drag to reorder - Side scroll
             </Text>
           </View>
         );
-        
-      case 'emptyState':
+
+      case "emptyState":
         return (
           <View style={styles.emptyState}>
-            <MaterialIcons name="psychology" size={64} color={theme.colors.textSecondary} />
-            <Text style={[styles.emptyStateTitle, { color: theme.colors.text }]}>No habits yet</Text>
-            <Text style={[styles.emptyStateSubtitle, { color: theme.colors.textSecondary }]}>
+            <MaterialIcons
+              name="psychology"
+              size={64}
+              color={theme.colors.textSecondary}
+            />
+            <Text
+              style={[styles.emptyStateTitle, { color: theme.colors.text }]}
+            >
+              No habits yet
+            </Text>
+            <Text
+              style={[
+                styles.emptyStateSubtitle,
+                { color: theme.colors.textSecondary },
+              ]}
+            >
               Start your journey by creating your first habit!
             </Text>
-            <TouchableOpacity onPress={handleAddHabit} style={styles.createFirstButton}>
+            <TouchableOpacity
+              onPress={handleAddHabit}
+              style={styles.createFirstButton}
+            >
               <LinearGradient
                 colors={[theme.colors.primary, theme.colors.secondary]}
                 style={styles.createFirstButtonGradient}
               >
                 <MaterialIcons name="add" size={20} color="#ffffff" />
-                <Text style={styles.createFirstButtonText}>Create First Habit</Text>
+                <Text style={styles.createFirstButtonText}>
+                  Create First Habit
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
         );
-        
-      case 'sectionHeader':
+
+      case "sectionHeader":
         return (
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
             {item.title}
           </Text>
         );
-        
-      case 'activeHabits':
+
+      case "activeHabits":
         return (
           <DraggableFlatList
             data={item.habits}
             onDragEnd={({ data }: { data: Habit[] }) => {
-              const updatedHabits = [...data, ...inactiveHabits];
+              const updatedHabits = [...data];
               handleDragEnd({ data: updatedHabits });
             }}
             keyExtractor={(habit: Habit) => habit.id}
@@ -435,50 +598,39 @@ export const HabitsScreen: React.FC<{
             }}
           />
         );
-        
-      case 'inactiveHabits':
-        return (
-          <DraggableFlatList
-            data={item.habits}
-            onDragEnd={({ data }: { data: Habit[] }) => {
-              const updatedHabits = [...activeHabits, ...data];
-              handleDragEnd({ data: updatedHabits });
-            }}
-            keyExtractor={(habit: Habit) => habit.id}
-            renderItem={renderHabitItem}
-            scrollEnabled={false}
-            dragItemOverflow={false}
-            activationDistance={isDragMode ? 0 : 50}
-            dragHitSlop={{ top: 0, bottom: 0, left: 0, right: 0 }}
-            animationConfig={{
-              damping: 20,
-              stiffness: 150,
-              mass: 0.2,
-              restSpeedThreshold: 0.05,
-              restDisplacementThreshold: 0.05,
-            }}
-          />
-        );
-        
       default:
         return null;
     }
   };
 
-  const activeHabits = habits.filter(h => h.isActive);
-  const inactiveHabits = habits.filter(h => !h.isActive);
+  const activeHabits = habits.filter((h) => h.isActive);
 
   if (loading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-        <MaterialIcons name="hourglass-empty" size={48} color={theme.colors.primary} />
-        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading habits...</Text>
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
+        <MaterialIcons
+          name="hourglass-empty"
+          size={48}
+          color={theme.colors.primary}
+        />
+        <Text
+          style={[styles.loadingText, { color: theme.colors.textSecondary }]}
+        >
+          Loading habits...
+        </Text>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <LinearGradient
         colors={[theme.colors.primary, theme.colors.secondary]}
         style={[styles.header, { paddingTop: insets.top + 20 }]}
@@ -491,11 +643,15 @@ export const HabitsScreen: React.FC<{
             onPress={() => setIsDragMode(!isDragMode)}
             style={[
               styles.dragModeButton,
-              { backgroundColor: isDragMode ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)' }
+              {
+                backgroundColor: isDragMode
+                  ? "rgba(255,255,255,0.3)"
+                  : "rgba(255,255,255,0.1)",
+              },
             ]}
           >
             <MaterialIcons
-              name={isDragMode ? 'drag-indicator' : 'reorder'}
+              name={isDragMode ? "drag-indicator" : "reorder"}
               size={20}
               color="rgba(255,255,255,0.9)"
             />
@@ -513,10 +669,10 @@ export const HabitsScreen: React.FC<{
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       />
-      
+
       {/* Floating Action Button */}
-      <TouchableOpacity 
-        style={[styles.fab, { backgroundColor: theme.colors.primary }]} 
+      <TouchableOpacity
+        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
         onPress={handleAddHabit}
         activeOpacity={0.8}
       >
@@ -529,54 +685,54 @@ export const HabitsScreen: React.FC<{
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: "#f8fafc",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8fafc",
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#64748b',
+    color: "#64748b",
   },
   header: {
     paddingBottom: 24,
     paddingHorizontal: 24,
   },
   headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   headerTitle: {
     fontSize: 22,
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.95)',
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.95)",
   },
   dragModeButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: "rgba(255,255,255,0.3)",
   },
   dragModeIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
     marginBottom: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'currentColor',
+    borderColor: "currentColor",
   },
   dragModeText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginLeft: 8,
   },
   scrollContent: {
@@ -588,7 +744,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 16,
     marginTop: 16,
   },
@@ -602,18 +758,18 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 1,
   },
   habitCardDragMode: {
     borderWidth: 2,
-    borderColor: 'rgba(59, 130, 246, 0.3)',
-    borderStyle: 'dashed',
+    borderColor: "rgba(59, 130, 246, 0.3)",
+    borderStyle: "dashed",
   },
   habitCardDragging: {
     elevation: 8,
@@ -622,15 +778,15 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1.02 }],
   },
   habitContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   iconContainer: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 16,
   },
   habitInfo: {
@@ -638,7 +794,7 @@ const styles = StyleSheet.create({
   },
   habitName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 4,
   },
   habitDescription: {
@@ -647,75 +803,96 @@ const styles = StyleSheet.create({
   },
   habitFrequency: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   habitActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   dragHandle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 4,
   },
   actionButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   emptyState: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 64,
   },
   emptyStateTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 24,
     marginBottom: 8,
   },
   emptyStateSubtitle: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 24,
     marginBottom: 32,
   },
   createFirstButton: {
     borderRadius: 25,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   createFirstButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 24,
     paddingVertical: 12,
   },
   createFirstButtonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 8,
   },
   fab: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 24,
     right: 24,
     width: 56,
     height: 56,
     borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     elevation: 8,
-    shadowColor: '#000000',
+    shadowColor: "#000000",
     shadowOffset: {
       width: 0,
       height: 4,
     },
     shadowOpacity: 0.3,
     shadowRadius: 8,
+  },
+   weeklyProgress: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 16,
+    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+    dayCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dayText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

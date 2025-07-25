@@ -95,8 +95,8 @@ export const AnalyticsScreen: React.FC = () => {
   };
 
   const renderStats = () => {
-    const activeHabits = habits.filter(h => h.isActive);
-    const totalHabits = habits.length;
+    const dailyHabits = habits.filter(h => h.frequency === 'daily');
+    const weeklyHabits = habits.filter(h => h.frequency === 'weekly');
     const stats = calculateStats();
     
     return (
@@ -104,21 +104,21 @@ export const AnalyticsScreen: React.FC = () => {
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Overview</Text>
         <View style={styles.statsRow}>
           <View style={[styles.statCard, { backgroundColor: theme.colors.surface }]}>
-            <MaterialIcons name="psychology" size={24} color={theme.colors.primary} />
+            <MaterialIcons name="today" size={24} color={theme.colors.primary} />
             <Text style={[styles.statValue, { color: theme.colors.text }]}>
-              {totalHabits}
+              {dailyHabits.length}
             </Text>
             <Text style={[styles.statTitle, { color: theme.colors.textSecondary }]}>
-              Total Habits
+              Daily Habits
             </Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: theme.colors.surface }]}>
-            <MaterialIcons name="trending-up" size={24} color={theme.colors.success} />
+            <MaterialIcons name="repeat" size={24} color={theme.colors.success} />
             <Text style={[styles.statValue, { color: theme.colors.text }]}>
-              {activeHabits.length}
+              {weeklyHabits.length}
             </Text>
             <Text style={[styles.statTitle, { color: theme.colors.textSecondary }]}>
-              Active Habits
+              Weekly Habits
             </Text>
           </View>
         </View>

@@ -34,17 +34,18 @@ export const StatsCard: React.FC<StatsCardProps> = ({
         style={[styles.card, { 
                 backgroundColor: theme.colors.surface,
                 borderRadius: 16,
+                shadowColor: theme.colors.shadow,
             }]}
       >
         <View style={[styles.iconContainer, { backgroundColor: `${color}30` }]}>
           <MaterialIcons name={icon as any} size={24} color={color} />
         </View>
         
-        <View style={styles.content}>
-          <Text style={styles.value}>{value}</Text>
-          <Text style={styles.title}>{title}</Text>
+        <View style={[styles.content]}>
+          <Text style={[styles.value, { color: theme.colors.text }]}>{value}</Text>
+          <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text>
           {subtitle && (
-            <Text style={styles.subtitle}>{subtitle}</Text>
+            <Text style={[styles.subtitle, { color: theme.colors.text }]}>{subtitle}</Text>
           )}
         </View>
       </View>
@@ -62,7 +63,6 @@ const styles = StyleSheet.create({
     padding: 18,
     minHeight: 100,
     elevation: 4,
-    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -85,17 +85,14 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#ffffff',
     marginBottom: 4,
   },
   title: {
     fontSize: 14,
     fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.9)',
     marginBottom: 2,
   },
   subtitle: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.7)',
   },
 });

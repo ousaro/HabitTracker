@@ -305,7 +305,7 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
             </View>
             <View style={styles.habitHeaderInfo}>
               <Text style={styles.habitName}>{habit.name}</Text>
-              <Text style={styles.habitFrequency}>{getFrequencyText(habit)}</Text>
+              <Text style={styles.habitFrequency}>{habit.frequency}</Text>
             </View>
           </View>
           
@@ -436,7 +436,7 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ navigation
             <View style={[styles.infoRow]}>
               <MaterialIcons name="schedule" size={20} color={theme.colors.textSecondary} />
               <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>Frequency</Text>
-              <Text style={[styles.infoValue, { color: theme.colors.text, flexWrap: 'wrap', marginLeft: 76 }]}>
+              <Text style={[styles.infoValue, { color: theme.colors.text }]}>
                 {getFrequencyText(habit)}
               </Text>
             </View>
@@ -626,11 +626,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
+infoRow: {
+  flexDirection: 'row',
+  alignItems: 'flex-start',
+  paddingVertical: 12,
+},
   infoLabel: {
     flex: 1,
     fontSize: 14,
@@ -639,6 +639,8 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 14,
     fontWeight: '600',
+    flex: 1, 
+    textAlign: 'right',
   },
   chartCard: {
     borderRadius: 16,
@@ -685,4 +687,5 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     paddingHorizontal: 20,
   },
+  
 });
