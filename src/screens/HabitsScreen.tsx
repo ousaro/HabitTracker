@@ -32,6 +32,7 @@ import { HabitsStackParamList } from "../navigation/HabitsStackNavigator";
 import { useTheme } from "../theme/ThemeProvider";
 import { getNow } from "../utils/helpers";
 import { HabitStatsService } from "../services/HabitStatsService";
+import { useAlert } from "../context/AlertContext";
 
 interface HabitListItemProps {
   habit: Habit;
@@ -362,6 +363,7 @@ export const HabitsScreen: React.FC<{
   const [loading, setLoading] = useState(true);
   const [isDragMode, setIsDragMode] = useState(false);
   const [weeklyData, setWeeklyData] = useState<weeklyData>({});
+  const alert = useAlert();
 
   const loadHabits = async () => {
     try {
@@ -419,28 +421,19 @@ export const HabitsScreen: React.FC<{
   };
 
   const handleDeleteHabit = (habit: Habit) => {
-    Alert.alert(
-      "Delete Habit",
-      `Are you sure you want to delete "${habit.name}"? This action cannot be undone.`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
+    alert({
+      title: "Delete Habit",
+      message: `Are you sure you want to delete "${habit.name}"? This action cannot be undone.`,
+      onConfirm: async () => {
+         try {
               await StorageService.deleteHabit(habit.id);
               await loadHabits();
             } catch (error) {
               console.error("Error deleting habit:", error);
-            }
-          },
-        },
-      ]
-    );
+        }
+      }
+    });
+
   };
 
   const handleToggleActive = async (habit: Habit) => {
