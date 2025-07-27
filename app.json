@@ -21,7 +21,7 @@
         "backgroundColor": "#667eea"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.ousaro.HabitTracker"
+      "package": "com.ousaro.habittracker"
     },
     "web": {
       "favicon": "./assets/favicon.png"
