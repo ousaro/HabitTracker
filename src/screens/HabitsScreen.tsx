@@ -430,7 +430,7 @@ export const HabitsScreen: React.FC<{
       onConfirm: async () => {
          try {
               await StorageService.deleteHabit(habit.id);
-              await loadHabits();
+              //await loadHabits();
             } catch (error) {
               console.error("Error deleting habit:", error);
         }
