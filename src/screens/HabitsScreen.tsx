@@ -413,16 +413,19 @@ export const HabitsScreen: React.FC<{
   }, []);
 
   const handleAddHabit = () => {
+    setIsDragMode(false);
     navigation.navigate("AddHabit");
   };
 
   const handleEditHabit = (habit: Habit) => {
+    setIsDragMode(false);
     navigation.navigate("EditHabit", { habit });
   };
 
   const handleDeleteHabit = (habit: Habit) => {
     alert({
       title: "Delete Habit",
+      type: "error",
       message: `Are you sure you want to delete "${habit.name}"? This action cannot be undone.`,
       onConfirm: async () => {
          try {
@@ -447,6 +450,9 @@ export const HabitsScreen: React.FC<{
   };
 
   const handleHabitPress = (habit: Habit) => {
+    if (isDragMode) {
+      return;
+    }
     navigation.navigate("HabitDetail", { habitId: habit.id });
   };
 
